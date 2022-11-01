@@ -1,5 +1,5 @@
 # Installation
-`git clone this`
+`git clone https://github.com/neko-0/WaveformAna.git`
 
 `cd WaveformAna; mkdir -p build`
 
