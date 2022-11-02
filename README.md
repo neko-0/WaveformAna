@@ -9,6 +9,9 @@
 
 `build`
 
+NOTE: if you have problem compiling with the <std::filesystem>, try to update
+gcc/g++ to version 11.
+
 # Running Analysis
 
 `run_Ana --selector SSRL --directory path_to_input_files`
