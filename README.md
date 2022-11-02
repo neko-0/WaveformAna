@@ -1,9 +1,11 @@
 # Installation
+`mkdir TestArea; cd TestArea`
+
 `git clone https://github.com/neko-0/WaveformAna.git`
 
-`cd WaveformAna; mkdir -p build`
+`mkdir -p build`
 
-`cd source; source setup.sh`
+`cd WaveformAna; source setup.sh`
 
 `build`
 
