@@ -24,8 +24,20 @@ where
 
 New user analysis need to be registered in order to be used with `run_Ana`.
 
-The user analysis need to be derived from class `BaseAna`, and user needs to
-implement the following virtual member functions:
+The user analysis need to be derived from class `BaseAna`, e.g.
+
+```
+struct MyNewAna : BaseAna {
+  MyNewAna(){};
+  ~MyNewAna(){};
+  virtual void initialize(BetaConfigMgr *configMgr);
+  virtual void execute(BetaConfigMgr *configMgr);
+  virtual void finalize(BetaConfigMgr *configMgr);
+};
+
+AnalysisRegister<MyNewAna> reg("My_Analysis");
+```
+and user needs to implement the following virtual member functions:
   - `void initialize(BetaConfigMgr *configMgr)`
 
     call only once for initialization purpose.
