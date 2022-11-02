@@ -27,6 +27,9 @@ New user analysis need to be registered in order to be used with `run_Ana`.
 The user analysis need to be derived from class `BaseAna`, e.g.
 
 ```
+#include "analysisDriver/baseAna.hpp"
+#include "configMgr/betaConfigMgr.hpp"
+
 struct MyNewAna : BaseAna {
   MyNewAna(){};
   ~MyNewAna(){};
