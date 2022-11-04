@@ -4,6 +4,12 @@
 #include <string>
 #include <stdexcept>
 
+#include <chrono>
+#include <iostream>
+
+typedef std::chrono::high_resolution_clock Time;
+typedef std::chrono::duration<double> Second;
+
 //==============================================================================
 void AnalysisDriver::AnalysisSelector(const std::string &name){
   this->user_ana = AnalysisFactory::SelectAnalysis(name);
@@ -29,11 +35,20 @@ void AnalysisDriver::Initialize(const std::string &fname){
 //==============================================================================
 void AnalysisDriver::EventLoop(){
   LOG_INFO("Starting EventLoop.");
+  auto t0 = Time::now();
+  int previous_count = 0;
   while(this->configMgr->NextEvent()){
     if( counter_ % 1000 == 0 ||
         (counter_ % 10 ==0 && counter_ <=100) ||
         (counter_ == this->configMgr->GetInputEntries()-1) ){
-      LOG_INFO("Proccesed number of events:" + std::to_string(counter_));
+      Second dt = Time::now() - t0;
+      int dN = (counter_ - previous_count);
+      int evt_s =  dN / dt.count();
+      LOG_INFO("Proccesed number of events: "
+        + std::to_string(counter_) + ", "
+        + std::to_string(evt_s) + " evt/s");
+      previous_count = counter_;
+      t0 = Time::now();
     }
     DoAnalysis();
     this->configMgr->Fill();
