@@ -13,12 +13,12 @@ double waveform_methods::LinearInterpolationX(
 }
 
 double waveform_methods::CalcRiseTime(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start_index,
   const double &low,
   const double &high,
-  const RiseTimeType &type)
+  const EdgeType &type)
 {
   int max_index = start_index;
   if(max_index < 0){
@@ -33,7 +33,7 @@ double waveform_methods::CalcRiseTime(
 
   // find the lower and upper bound for rise time. (10% to 90% default)
   double vmax = v_trace.at(max_index);
-  if(type == RiseTimeType::Fall){
+  if(type == EdgeType::Fall){
     high_b = vmax * low;
     low_b = vmax * high;
   } else {
@@ -57,7 +57,7 @@ double waveform_methods::CalcRiseTime(
       if(bot_i >= trace_size-1) bot_i--;
       break;
     }
-    if(type == RiseTimeType::Fall) {
+    if(type == EdgeType::Fall) {
       i++;
       if(i >= trace_size) break;
     } else {
@@ -79,12 +79,12 @@ double waveform_methods::CalcRiseTime(
 
 //==============================================================================
 double waveform_methods::CalcFallTime(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start_index,
   const double &low,
   const double &high)
 {
   return waveform_methods::CalcRiseTime(
-      v_trace, t_trace, start_index, low, high, RiseTimeType::Fall);
+      v_trace, t_trace, start_index, low, high, EdgeType::Fall);
 }

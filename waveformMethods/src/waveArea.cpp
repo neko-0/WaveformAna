@@ -16,8 +16,8 @@ index
   return: (double) value of the pulse area
 ==============================================================================*/
 double waveform_methods::_CalcPulseArea(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   int lstart_i, int rstart_i,
   const double &baseline/*= 0.0*/)
 {
@@ -60,8 +60,8 @@ double waveform_methods::_CalcPulseArea(
 
 //==============================================================================
 double waveform_methods::CalcPulseArea(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &max_index, const double &baseline/*= 0.0*/)
 {
   int trace_size = v_trace.size();
@@ -73,8 +73,8 @@ double waveform_methods::CalcPulseArea(
 
 //==============================================================================
 double waveform_methods::CalcPulseArea(
-    const TraceDType &v_trace,
-    const TraceDType &t_trace)
+    const TraceD &v_trace,
+    const TraceD &t_trace)
 {
   auto vmax = waveform_methods::FindSignalMax(v_trace, t_trace);
   return waveform_methods::CalcPulseArea(v_trace, t_trace, vmax.index);
@@ -82,8 +82,8 @@ double waveform_methods::CalcPulseArea(
 
 //==============================================================================
 double waveform_methods::CalcPulseArea(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start_index,
   const int &end_index)
 {
@@ -101,8 +101,8 @@ double waveform_methods::CalcPulseArea(
 
 //==============================================================================
 double waveform_methods::CalcPulseArea(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const double &time_start,
   const double &time_end)
 {
