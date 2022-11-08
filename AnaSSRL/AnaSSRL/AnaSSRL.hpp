@@ -28,9 +28,11 @@ private:
   double *output_tmax[num_ch_];
   double *output_rise[num_ch_];
   double *output_area[num_ch_];
+  double *output_fwhm[num_ch_];
 
   std::vector<double> *output_w[num_ch_];
   std::vector<double> *output_t[num_ch_];
+  std::vector<double> *output_cfd[num_ch_];
 
   static AnalysisRegister<AnaSSRL> reg;
 };
