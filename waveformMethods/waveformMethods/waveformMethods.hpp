@@ -61,6 +61,24 @@ namespace waveform_methods
     const double &threshold);
 
   //============================================================================
+  std::vector<double> FindTimeAtThreshold(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const int &start,
+    const int &end,
+    const double &threshold);
+  std::vector<double> FindTimeAtThreshold(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const double &threshold);
+  std::vector<double> FindTimeAtThreshold(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const double &tmin,
+    const double &tmax,
+    const double &threshold);
+
+  //============================================================================
   double CalcRiseTime(
     const TraceD &v_trace,
     const TraceD &t_trace,
@@ -91,6 +109,17 @@ namespace waveform_methods
     const TraceD &v_trace,
     const TraceD &t_trace,
     const double &tmin, const double &tmax);
+
+  //============================================================================
+  double CalcBaseline(
+    const TraceD &v_trace,
+    const int &start,
+    const int &end);
+  double CalcBaseline(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const double &tmin,
+    const double &tmax);
 
   //============================================================================
   double CalcPulseArea(
