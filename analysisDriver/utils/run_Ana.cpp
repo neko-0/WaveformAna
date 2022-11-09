@@ -16,7 +16,7 @@ void RunAnalysis(const std::string &ana, const std::string &fname){
 
 //==============================================================================
 int main(int argc, char **argv){
-  bpo::options_description desc("SSRL analysis options.");
+  bpo::options_description desc("Analysis options.");
   bpo::variables_map vm;
   bpo::command_line_style::style_t style = bpo::command_line_style::style_t(
     bpo::command_line_style::unix_style|
@@ -40,9 +40,13 @@ int main(int argc, char **argv){
     return 0;
   }
 
-
-  LOG_INFO(" Starting SSRL analysis ");
-  LOG_INFO(" Getting list of input files ");
+  // verifying analysis
+  std::string selector = vm["selector"].as<std::string>();
+  if(!AnalysisFactory::CheckAnalysis(selector)) {
+    LOG_INFO("No analysis " + selector);
+    return 1;
+  }
+  LOG_INFO("Getting list of input files ");
 
   auto files = GetListOfFiles(vm["directory"].as<std::string>(), "*.root");
 
@@ -51,15 +55,15 @@ int main(int argc, char **argv){
     return 1;
   }
 
-  LOG_INFO(" Here is list of input files ");
+  LOG_INFO("Here is list of input files ");
   for(auto &fname : files){
     LOG_INFO(fname);
   }
 
   // do analysis
   for(auto &fname : files){
-    LOG_INFO("staring analysis with input file: " + fname);
-    RunAnalysis(vm["selector"].as<std::string>(), fname);
+    LOG_INFO("Staring analysis with input file: " + fname);
+    RunAnalysis(selector, fname);
   }
 
   return 0;
