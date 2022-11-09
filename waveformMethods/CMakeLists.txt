@@ -4,6 +4,7 @@ project(WaveformMethods VERSION 1.0 DESCRIPTION "WaveformMethods")
 include(GNUInstallDirs)
 
 add_library(WaveformMethods SHARED
+  src/cfdTime.cpp
   src/noise.cpp
   src/riseTime.cpp
   src/waveArea.cpp

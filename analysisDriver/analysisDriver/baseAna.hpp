@@ -32,6 +32,13 @@ struct AnalysisFactory{
     return it->second();
   }
 
+  static bool CheckAnalysis(const std::string &name){
+    auto *my_map = GetMap();
+    auto it = my_map->find(name);
+    if(it == my_map->end()) return false;
+    return true;
+  }
+
   static ana_map *GetMap(){
     static ana_map my_map;
     return &my_map;

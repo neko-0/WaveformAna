@@ -4,8 +4,8 @@ using namespace waveform_methods;
 
 //==============================================================================
 WavePoint waveform_methods::FindSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start,
   const int &end)
 {
@@ -27,16 +27,16 @@ WavePoint waveform_methods::FindSignalMax(
 
 //==============================================================================
 WavePoint waveform_methods::FindSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace)
+  const TraceD &v_trace,
+  const TraceD &t_trace)
 {
   return waveform_methods::FindSignalMax(v_trace, t_trace, 0, v_trace.size());
 }
 
 //==============================================================================
 WavePoint waveform_methods::FindSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const double &min,
   const double &max)
 {

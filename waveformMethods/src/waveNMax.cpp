@@ -5,8 +5,8 @@
 using namespace waveform_methods;
 
 WavePoints waveform_methods::_FindIdenticalSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType&t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start, const int &end, const double &baseline)
 {
   WavePoints wave_list = {};
@@ -36,8 +36,8 @@ WavePoints waveform_methods::_FindIdenticalSignalMax(
 
 //==============================================================================
 WavePoints waveform_methods::FindIdenticalSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start, const int &end)
 {
   int trace_size = v_trace.size();
@@ -49,8 +49,8 @@ WavePoints waveform_methods::FindIdenticalSignalMax(
 
 //==============================================================================
 WavePoints waveform_methods::FindIdenticalSignalMax(
-  const TraceDType &v_trace,
-  const TraceDType &t_trace)
+  const TraceD &v_trace,
+  const TraceD &t_trace)
 {
   return waveform_methods::_FindIdenticalSignalMax(
     v_trace, t_trace, 0, v_trace.size());
@@ -58,8 +58,8 @@ WavePoints waveform_methods::FindIdenticalSignalMax(
 
 //==============================================================================
 WavePoints waveform_methods::_FindMultipleSignalMax(
-  const std::vector<double> &v_trace,
-  const std::vector<double> &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const int &start_i,
   const int &end_i,
   const double &threshold,
@@ -113,8 +113,8 @@ WavePoints waveform_methods::_FindMultipleSignalMax(
 
 //==============================================================================
 WavePoints waveform_methods::FindMultipleSignalMax(
-  const std::vector<double> &v_trace,
-  const std::vector<double> &t_trace,
+  const TraceD &v_trace,
+  const TraceD &t_trace,
   const double &threshold,
   const double &scale /* = 2.0 */)
 {

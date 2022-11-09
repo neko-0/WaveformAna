@@ -1,54 +1,49 @@
+#include "waveformMethods/waveformMethods.hpp"
 
-
-/*==============================================================================
-Find the time at where the voltage crosses the threshold level.
-
-  param thresholdLevel := the threshold level
-  param voltage        := the vector of voltage value of the waveform
-  param time           := the vector of time value of the waveform
-  param pmax_holder    := a std pair of the Pmax value and its index in the wave
-
-  return : the time at the threshold.
-
-/=============================================================================*/
-double WaveformAnalysis::Find_Time_At_Threshold(
-    const double &thresholdLevel,
-    const std::vector<double> &voltageVec,
-    const std::vector<double> &timeVec,
-    const std::pair<double, unsigned int> &Pmax
-)
+std::vector<double> waveform_methods::FindTimeAtThreshold(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const int &start,
+  const int &end,
+  const double &threshold)
 {
-    double timeAtThreshold = 0.0, timeBelowThreshold = 0.0;
-
-    unsigned int timeBelowThreshold_index = 0;
-
-    unsigned int pmax_index = Pmax.second;
-    double pmax = Pmax.first;
-    std::size_t npoints = voltageVec.size();
-
-    if (pmax_index == npoints - 1)
-        pmax_index = pmax_index - 1; // preventing out of range
-
-    if (pmax < thresholdLevel)
-    {
-        return 9999.0;
+  std::vector<double> threshold_time = {};
+  for(int i = start; i < end; i++){
+    double v_value = v_trace.at(i);
+    if(v_value >= threshold && v_trace.at(i-1) < threshold){
+      t_value = waveform_methods::LinearInterpolationX(
+        t_trace.at(i-1), v_trace.at(i-1),
+        t_trace.at(i), v_trace.at(i), threshold);
+      threhosld_time.push_back(t_value);
     }
-    else
-    {
-        for (int i = pmax_index; i > -1; i--)
-        {
-            if (voltageVec.at(i) <= thresholdLevel)
-            {
-                timeBelowThreshold_index = i;
+  }
 
-                timeBelowThreshold = timeVec.at(i);
+  return threshold_time;
+}
 
-                break;
-            }
-        }
+//==============================================================================
+std::vector<double> waveform_methods::FindTimeAtThreshold(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const double &threshold)
+{
+  return waveform_methods::FindTimeAtThreshold(
+    v_trace, t_trace, 0, v_trace.size(), threshold);
+}
 
-        timeAtThreshold = xlinearInter( timeBelowThreshold, voltageVec.at(timeBelowThreshold_index), timeVec.at(timeBelowThreshold_index + 1), voltageVec.at(timeBelowThreshold_index + 1), thresholdLevel);
+//==============================================================================
+std::vector<double> waveform_methods::FindTimeAtThreshold(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const double &tmin,
+  const double &tmax,
+  const double &threshold)
+{
+  auto lower = std::lower_bound(t_trace.begin(), t_trace.end(), tmin);
+  auto upper = std::lower_bound(t_trace.begin(), t_trace.end(), tmax);
+  int start = std::distance(t_trace.begin(), lower);
+  int end = std::distance(t_trace.begin(), upper);
 
-        return timeAtThreshold;
-    }
+  return waveform_methods::FindTimeAtThreshold(
+    v_trace, t_trace, start, end, threshold);
 }
