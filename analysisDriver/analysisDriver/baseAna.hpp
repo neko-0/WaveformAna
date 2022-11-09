@@ -45,7 +45,7 @@ struct AnalysisFactory{
   }
 
 private:
-  static ana_map my_map;
+  inline static ana_map my_map;
 };
 
 //==============================================================================

@@ -20,7 +20,7 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     output_rise[i] = configMgr->SetOutputBranch<double>("rise" + current_ch);
     output_area[i] = configMgr->SetOutputBranch<double>("area" + current_ch);
     output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
-    
+
     output_cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("cfd" + current_ch);
     output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
     output_t[i] = configMgr->SetOutputBranch<std::vector<double>>("t" + current_ch);
@@ -62,3 +62,5 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
 void AnaSSRL::finalize(BetaConfigMgr *configMgr){
   // pass
 }
+
+AnalysisRegister<AnaSSRL> AnaSSRL::reg("SSRL");

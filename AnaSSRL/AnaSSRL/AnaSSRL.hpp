@@ -37,7 +37,4 @@ private:
   static AnalysisRegister<AnaSSRL> reg;
 };
 
-
-AnalysisRegister<AnaSSRL> AnaSSRL::reg("SSRL");
-
 #endif
