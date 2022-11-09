@@ -29,10 +29,19 @@ set(CMAKE_CXX_FLAGS "-lboost_program_options")
 # find_package(Boost REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
+# Need to include user analysis here as well.
+set(ANA_LIST AnaSSRL)
+
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
     add_executable(run_Ana utils/run_Ana.cpp)
     target_link_libraries(run_Ana PUBLIC ${Boost_LIBRARIES})
     target_link_libraries(run_Ana PUBLIC AnalysisDriver ConfigMgr Utilities)
-    target_link_libraries(run_Ana PUBLIC AnaSSRL)
+    target_link_libraries(run_Ana PUBLIC ${ANA_LIST})
 endif()
+
+add_executable(ls_Ana utils/ls_Ana.cpp)
+target_link_libraries(ls_Ana PUBLIC AnalysisDriver Utilities ${ANA_LIST})
+
+add_executable(check_Ana utils/check_Ana.cpp)
+target_link_libraries(check_Ana PUBLIC AnalysisDriver Utilities ${ANA_LIST})
