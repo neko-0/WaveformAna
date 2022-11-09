@@ -44,7 +44,7 @@ void AnalysisDriver::AnalysisSelector(const std::string &name){
     LOG_INFO("Selected user analysis: " + name);
   }
   else{
-    auto ana_map = AnalysisFactory::GetMap();
+    auto &ana_map = AnalysisFactory::GetMap();
     LOG_ERROR("Number of registered analysis: " + std::to_string(ana_map.size()));
     throw std::runtime_error("Unable to select analysis: " + name);
   }
