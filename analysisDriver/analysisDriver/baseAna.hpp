@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 
 struct BaseAna {
@@ -26,34 +27,36 @@ struct AnalysisFactory{
   typedef std::map<std::string, BaseAna*(*)()> ana_map;
 
   static BaseAna *SelectAnalysis(const std::string &name){
-    auto *my_map = GetMap();
-    auto it = my_map->find(name);
-    if(it == my_map->end()) return 0;
+    auto my_map = GetMap();
+    auto it = my_map.find(name);
+    if(it == my_map.end()) return 0;
     return it->second();
   }
 
   static bool CheckAnalysis(const std::string &name){
-    auto *my_map = GetMap();
-    auto it = my_map->find(name);
-    if(it == my_map->end()) return false;
+    auto my_map = GetMap();
+    auto it = my_map.find(name);
+    if(it == my_map.end()) return false;
     return true;
   }
 
-  static ana_map *GetMap(){
-    static ana_map my_map;
-    return &my_map;
+  static ana_map &GetMap(){
+    static ana_map m_map;
+    return m_map;
   }
 
 private:
-  inline static ana_map my_map;
+  inline static ana_map m_map = {};
 };
 
 //==============================================================================
 template<typename T>
 struct AnalysisRegister:AnalysisFactory{
   AnalysisRegister(const std::string &name){
-    auto *my_map = GetMap();
-    my_map->insert(std::make_pair(name, &CreateUserAna<T>));
+    auto &my_map = GetMap();
+    my_map.insert(std::make_pair(name, &CreateUserAna<T>));
+    std::cout << "hi---" << AnalysisFactory::GetMap().size() << "\n";
+    std::cout << "hi---" << my_map.size() << "\n";
   }
 };
 
