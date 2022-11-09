@@ -40,12 +40,12 @@ struct AnalysisFactory{
   }
 
   static ana_map &GetMap(){
-    static ana_map m_map;
-    return m_map;
+    static ana_map *my_map = new ana_map;
+    return *my_map;
   }
 
-private:
-  inline static ana_map m_map = {};
+// private:
+//   inline static ana_map m_map = {};
 };
 
 //==============================================================================
