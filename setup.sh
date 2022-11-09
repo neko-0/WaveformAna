@@ -3,7 +3,7 @@
 export TestArea=$(pwd)
 export WAVEANA_BUILD_DIR=$TestArea/../WaveformAna_build
 
-mkdir -p $BUILD_DIR
+mkdir -p $WAVEANA_BUILD_DIR
 # alias build='cmake --build $TestArea/../build; source $TestArea/../build/*/setup.sh'
 alias build='cmake --build $WAVEANA_BUILD_DIR'
 
