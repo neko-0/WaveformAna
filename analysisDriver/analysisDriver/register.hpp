@@ -53,6 +53,8 @@ struct AnalysisRegister:AnalysisFactory{
     my_map.insert(std::make_pair(name, &CreateUserAna<T>));
     return true;
   }
+
+  static bool Run();
 };
 
 #endif

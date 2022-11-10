@@ -44,7 +44,7 @@ int main(int argc, char **argv){
 
   // verifying analysis
   std::string selector = vm["selector"].as<std::string>();
-  if(!AnalysisFactory::CheckAnalysis(selector)) {
+  if(AnalysisRegister::Run() && !AnalysisFactory::CheckAnalysis(selector)) {
     LOG_INFO("No analysis " + selector);
     return 1;
   }

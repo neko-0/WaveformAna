@@ -3,4 +3,9 @@
 // include analysis header
 #include "AnaSSRL/AnaSSRL.hpp"
 
-static auto _ssrl_reg = AnalysisRegister::Register<AnaSSRL>("SSRL");
+
+bool AnalysisRegister::Run(){
+  auto _ssrl_reg = AnalysisRegister::Register<AnaSSRL>("SSRL");
+
+  return true;
+}
