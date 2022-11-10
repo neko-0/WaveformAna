@@ -207,27 +207,11 @@ dtype *BetaConfigMgr::SetOutputBranch(const std::string &name)
   return my_branch->branch();
 }
 
-BaseBranch *BetaConfigMgr::GetInputBranch(const std::string &name){
-  auto index = this->input_branch_map_.find(name);
-  if(index == this->input_branch_map_.end() ){
-    return nullptr;
-  }
-  return this->input_branches_.at(index->second);
-}
-
 template <typename dtype>
 dtype *BetaConfigMgr::GetInputBranchValue(const std::string &name){
   auto my_branch = BetaConfigMgr::GetInputBranch(name);
   if(my_branch) return static_cast<BranchWrapper<dtype>*>(my_branch)->branch();
   return nullptr;
-}
-
-BaseBranch *BetaConfigMgr::GetOutputBranch(const std::string &name){
-  auto index = this->output_branch_map_.find(name);
-  if(index == this->output_branch_map_.end() ){
-    return nullptr;
-  }
-  return this->output_branches_.at(index->second);
 }
 
 template <typename dtype>
@@ -236,8 +220,5 @@ dtype *BetaConfigMgr::GetOutputBranchValue(const std::string &name){
   if(my_branch) return static_cast<BranchWrapper<dtype>*>(my_branch)->branch();
   return nullptr;
 }
-
-
-ConfigMgrRegister<BetaConfigMgr> reg("BetaConfigMgr");
 
 #endif

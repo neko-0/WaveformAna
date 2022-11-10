@@ -60,3 +60,22 @@ bool BetaConfigMgr::NextEvent(){
 bool BetaConfigMgr::Fill(){
   return this->output_tree->Fill();
 }
+
+BaseBranch *BetaConfigMgr::GetInputBranch(const std::string &name){
+  auto index = this->input_branch_map_.find(name);
+  if(index == this->input_branch_map_.end() ){
+    return nullptr;
+  }
+  return this->input_branches_.at(index->second);
+}
+
+BaseBranch *BetaConfigMgr::GetOutputBranch(const std::string &name){
+  auto index = this->output_branch_map_.find(name);
+  if(index == this->output_branch_map_.end() ){
+    return nullptr;
+  }
+  return this->output_branches_.at(index->second);
+}
+
+
+ConfigMgrRegister<BetaConfigMgr> reg("BetaConfigMgr");

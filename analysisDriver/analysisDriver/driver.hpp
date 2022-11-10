@@ -2,7 +2,7 @@
 #define ANALYSIS_DRIVER_H
 
 #include "configMgr/betaConfigMgr.hpp"
-#include "analysisDriver/baseAna.hpp"
+#include "baseAna/baseAna.hpp"
 
 #include <vector>
 #include <string>

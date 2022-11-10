@@ -1,7 +1,7 @@
 #ifndef ANA_SSRL_H
 #define ANA_SSRL_H
 
-#include "analysisDriver/baseAna.hpp"
+#include "baseAna/baseAna.hpp"
 #include "configMgr/betaConfigMgr.hpp"
 
 #include <vector>
@@ -33,8 +33,6 @@ private:
   std::vector<double> *output_w[num_ch_];
   std::vector<double> *output_t[num_ch_];
   std::vector<double> *output_cfd[num_ch_];
-
-  static AnalysisRegister<AnaSSRL> reg;
 };
 
 #endif

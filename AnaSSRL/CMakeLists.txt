@@ -6,5 +6,5 @@ add_library(AnaSSRL SHARED src/AnaSSRL.cpp)
 
 target_include_directories(AnaSSRL PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(AnaSSRL PRIVATE AnalysisDriver)
+target_link_libraries(AnaSSRL PRIVATE BaseAna)
 target_link_libraries(AnaSSRL PRIVATE ConfigMgr WaveformMethods Utilities)

@@ -1,6 +1,8 @@
 #include "analysisDriver/driver.hpp"
+#include "analysisDriver/register.hpp"
 #include "utilities/getFiles.hpp"
 #include "utilities/logger.hpp"
+
 
 #include <boost/program_options.hpp>
 

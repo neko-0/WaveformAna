@@ -1,25 +1,15 @@
-#ifndef BASEANA_H
-#define BASEANA_H
+#ifndef ANA_REGISTER_H
+#define ANA_REGISTER_H
 
-#include "configMgr/betaConfigMgr.hpp"
+#include "baseAna/baseAna.hpp"
 
 #include <string>
 #include <vector>
-
-
-struct BaseAna {
-
-  BaseAna(){};
-  virtual ~BaseAna(){};
-
-  virtual void initialize(BetaConfigMgr *configMgr) = 0;
-  virtual void execute(BetaConfigMgr *configMgr) = 0;
-  virtual void finalize(BetaConfigMgr *configMgr) = 0;
-};
+#include <map>
 
 //==============================================================================
 template<typename T>
-BaseAna *CreateUserAna(){return new T;}
+BaseAna *CreateUserAna(){return new T;};
 
 //==============================================================================
 struct AnalysisFactory{
@@ -43,17 +33,25 @@ struct AnalysisFactory{
     static ana_map *my_map = new ana_map;
     return *my_map;
   }
-
-// private:
-//   inline static ana_map m_map = {};
 };
 
 //==============================================================================
-template<typename T>
+// template<typename T>
+// struct AnalysisRegister:AnalysisFactory{
+//   AnalysisRegister(const std::string &name){
+//     auto &my_map = GetMap();
+//     my_map.insert(std::make_pair(name, &CreateUserAna<T>));
+//   }
+// };
+
 struct AnalysisRegister:AnalysisFactory{
-  AnalysisRegister(const std::string &name){
+  AnalysisRegister(){};
+
+  template<typename T>
+  static bool Register(const std::string &name){
     auto &my_map = GetMap();
     my_map.insert(std::make_pair(name, &CreateUserAna<T>));
+    return true;
   }
 };
 

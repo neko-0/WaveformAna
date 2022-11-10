@@ -1,4 +1,5 @@
 #include "analysisDriver/driver.hpp"
+#include "analysisDriver/register.hpp"
 #include "utilities/logger.hpp"
 
 #include <string>

@@ -62,5 +62,3 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
 void AnaSSRL::finalize(BetaConfigMgr *configMgr){
   // pass
 }
-
-AnalysisRegister<AnaSSRL> AnaSSRL::reg("SSRL");
