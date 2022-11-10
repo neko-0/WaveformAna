@@ -3,8 +3,6 @@
 
 `git clone https://github.com/neko-0/WaveformAna.git`
 
-`mkdir -p build`
-
 `cd WaveformAna; source setup.sh`
 
 `build`
