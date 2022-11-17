@@ -15,7 +15,7 @@ waveform_methods::WavePoint waveform_methods::_CalcCFDTime(
     start = start_i > -1 ? start_i : 0;
   }
   else if(type == EdgeType::Fall){
-    end = trace_size;
+    end = trace_size-1;
     start = start_i < trace_size ? start_i : trace_size - 1;
   }
 
