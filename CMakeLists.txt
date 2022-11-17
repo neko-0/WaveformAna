@@ -11,3 +11,4 @@ add_subdirectory(analysisDriver)
 # user analysis directory
 add_subdirectory(tests)
 add_subdirectory(AnaSSRL)
+add_subdirectory(AnaTCT)
