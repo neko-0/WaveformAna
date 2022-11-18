@@ -19,42 +19,56 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     output_tmax[i] = configMgr->SetOutputBranch<double>("tmax" + current_ch);
     output_rise[i] = configMgr->SetOutputBranch<double>("rise" + current_ch);
     output_area[i] = configMgr->SetOutputBranch<double>("area" + current_ch);
-    output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
+    // output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
 
     output_cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("cfd" + current_ch);
     output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
     output_t[i] = configMgr->SetOutputBranch<std::vector<double>>("t" + current_ch);
+
+    output_npmax[i] = configMgr->SetOutputBranch<std::vector<double>>("npmax" + current_ch);
+    output_ntmax[i] = configMgr->SetOutputBranch<std::vector<double>>("ntmax" + current_ch);
   }
 }
 
 void AnaSSRL::execute(BetaConfigMgr *configMgr){
 
-  const double v_scale = 1000.0; // V to mV
-  const double t_scale = 1e12; // s to ps
+  const double v_scale = 1; //1000.0; // V to mV
+  const double t_scale = 1; //1e12; // s to ps
 
   for(int ch = 0; ch < this->num_ch_; ch++){
+
+    // std::cout<<"  "<<ch<<"\n\n ";
+    // std::cout<<"  "<<w[ch]<<"\n\n ";
+    //std::cout<<"  "<<w[ch]->size()<<"\n\n ";
     // inverting signal
+    if(t[ch]->size() == 0) continue;
+    // std::cout<<"  "<<ch<<"\n\n ";
     for(int i=0; i < w[ch]->size(); i++){
       w[ch]->at(i) *= 1.0*v_scale;
       t[ch]->at(i) *= t_scale;
-      output_w[ch]->push_back(w[ch]->at(i));
-      output_t[ch]->push_back(t[ch]->at(i));
+      output_w[ch]->emplace_back(w[ch]->at(i));
+      output_t[ch]->emplace_back(t[ch]->at(i));
+      // std::cout<<"size  "<<w[ch]->size()<<"\n\n ";
     }
 
     auto wave_pt = wm::FindSignalMax(*w[ch], *t[ch]);
-    auto rise = wm::CalcRiseTime(*w[ch], *t[ch], wave_pt.index);
-    auto area = wm::CalcPulseArea(*w[ch], *t[ch], wave_pt.index);
-    auto cfd_times = wm::CalcCFDTime(*w[ch], *t[ch], wave_pt.index, 0.1, 0.1);
-    auto fwhm = wm::CalcFWHM(*w[ch], *t[ch], wave_pt.index);
+    // auto rise = wm::CalcRiseTime(*w[ch], *t[ch], wave_pt.index);
+    // auto area = wm::CalcPulseArea(*w[ch], *t[ch], wave_pt.index);
+    // auto cfd_times = wm::CalcCFDTime(*w[ch], *t[ch], wave_pt.index, 0.1, 0.1);
+    // auto fwhm = wm::CalcFWHM(*w[ch], *t[ch], wave_pt.index);
+    auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], 40);
 
     *output_pmax[ch] = wave_pt.v;
     *output_tmax[ch] = wave_pt.t;
-    *output_rise[ch] = rise;
-    *output_area[ch] = area;
-    *output_fwhm[ch] = fwhm;
+    // *output_rise[ch] = rise;
+    // *output_area[ch] = area;
+    // *output_fwhm[ch] = fwhm;
 
-    std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
-
+    // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
+    for(auto &pt : n_wave_pts){
+      output_npmax[ch]->push_back(pt.v);
+      output_ntmax[ch]->push_back(pt.t);
+    }
   }
 
 }
