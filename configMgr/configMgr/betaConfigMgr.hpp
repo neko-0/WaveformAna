@@ -214,7 +214,7 @@ dtype *BetaConfigMgr::SetOutputBranch(const std::string &name)
   if constexpr(is_vector<dtype>::value){
     LOG_INFO(name + ": dtype=<stl::vector>, buffer/clear will be handle internally");
     this->output_vector_branch_index_.push_back(this->output_branch_counter_);
-    my_branch->branch()->reserve(2000);
+    // my_branch->branch()->reserve(2000);
   } else {
     LOG_INFO(name + ": dtype=" + std::string(typeid(dtype).name()));
   }
