@@ -16,8 +16,8 @@ struct AnaSSRL : BaseAna {
   virtual void finalize(BetaConfigMgr *configMgr);
 
 private:
-  const int ch_start_ = 0;
-  static const int num_ch_ = 1;
+  const int ch_start_ = 3;
+  static const int num_ch_ = 3;
 
   // input variables
   std::vector<double> *w[num_ch_];

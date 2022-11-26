@@ -44,7 +44,7 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
     if(t[ch]->size() == 0) continue;
     // std::cout<<"  "<<ch<<"\n\n ";
     for(int i=0; i < w[ch]->size(); i++){
-      w[ch]->at(i) *= 1.0*v_scale;
+      w[ch]->at(i) *= -1.0*v_scale;
       t[ch]->at(i) *= t_scale;
       output_w[ch]->emplace_back(w[ch]->at(i));
       output_t[ch]->emplace_back(t[ch]->at(i));
@@ -56,7 +56,7 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
     // auto area = wm::CalcPulseArea(*w[ch], *t[ch], wave_pt.index);
     // auto cfd_times = wm::CalcCFDTime(*w[ch], *t[ch], wave_pt.index, 0.1, 0.1);
     // auto fwhm = wm::CalcFWHM(*w[ch], *t[ch], wave_pt.index);
-    auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], 40);
+    auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], 0.2*wave_pt.v);
 
     *output_pmax[ch] = wave_pt.v;
     *output_tmax[ch] = wave_pt.t;
