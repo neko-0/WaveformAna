@@ -73,6 +73,7 @@ void AnaTCT::execute(BetaConfigMgr *configMgr){
     *output_rise[ch] = rise;
     *output_area[ch] = area;
     *output_fwhm[ch] = fwhm;
+    *output_rms[ch] = rms;
 
     // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
   }
