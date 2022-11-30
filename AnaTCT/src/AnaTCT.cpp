@@ -31,6 +31,7 @@ void AnaTCT::initialize(BetaConfigMgr *configMgr){
     output_rise[i] = configMgr->SetOutputBranch<double>("rise" + current_ch);
     output_area[i] = configMgr->SetOutputBranch<double>("area" + current_ch);
     output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
+    output_rms[i] = configMgr->SetOutputBranch<double>("rms" + current_ch);
 
     // output_cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("cfd" + current_ch);
     output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
@@ -64,6 +65,7 @@ void AnaTCT::execute(BetaConfigMgr *configMgr){
     auto rise = wm::CalcRiseTime(*w[ch], *t, wave_pt.index);
     auto area = wm::CalcPulseArea(*w[ch], *t, wave_pt.index);
     auto fwhm = wm::CalcFWHM(*w[ch], *t, wave_pt.index);
+    auto rms = wm::CalcNoise(*w[ch], 0.25);
     // auto cfd_times = wm::CalcCFDTime(*w[ch], *t, wave_pt.index, 0.1, 0.1);
 
     *output_pmax[ch] = wave_pt.v;
