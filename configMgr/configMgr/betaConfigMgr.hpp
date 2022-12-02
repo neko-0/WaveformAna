@@ -87,6 +87,7 @@ class BetaConfigMgr : public BaseConfigMgr
   std::string output_filename_ = "output_dummy_name";
   std::string output_treename_ = "wfm";
   std::string output_file_prefix_ = "stats_";
+  std::string ext_config_name_;
 
   bool is_open_ = false;
 
@@ -149,24 +150,27 @@ public:
   BaseBranch *GetInputBranch(const std::string &name);
   BaseBranch *GetOutputBranch(const std::string &name);
 
-  void input_filename(const std::string &value){input_filename_ = value;}
-  std::string input_filename(){return input_filename_;}
-
-  void input_treename(const std::string &value){input_treename_ = value;}
-  std::string input_treename(){return input_treename_;}
-
-  void output_treename(const std::string &value){output_treename_ = value;}
-  std::string output_treename(){return output_treename_;}
-
-  void output_file_prefix(const std::string &value){output_file_prefix_ = value;}
-  std::string output_file_prefix(){return output_file_prefix_;}
-
   TFile *GetInputFile(){return input_file;}
   TTree *GetInputTree(){return input_tree;}
   TFile *GetOutputFile(){return output_file;}
   TTree *GetOutputTree(){return output_tree;}
 
-  int GetInputEntries(){return input_entries_;}
+  const int &GetInputEntries() const {return input_entries_;}
+
+  void input_filename(const std::string &value){input_filename_ = value;}
+  const std::string &input_filename() const {return input_filename_;}
+
+  void input_treename(const std::string &value){input_treename_ = value;}
+  const std::string &input_treename() const {return input_treename_;}
+
+  void output_treename(const std::string &value){output_treename_ = value;}
+  const std::string &output_treename() const {return output_treename_;}
+
+  void output_file_prefix(const std::string &value){output_file_prefix_ = value;}
+  const std::string &output_file_prefix() const {return output_file_prefix_;}
+
+  const std::string &ext_config_name() const {return ext_config_name_;}
+  void ext_config_name(const std::string &value){ext_config_name_ = value;}
 };
 
 //==============================================================================
