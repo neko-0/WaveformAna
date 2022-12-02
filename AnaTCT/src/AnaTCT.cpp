@@ -10,12 +10,10 @@ namespace wm = waveform_methods;
 void AnaTCT::initialize(BetaConfigMgr *configMgr){
 
   t = configMgr->SetInputBranch<std::vector<double>>("t0");
-  // std::cout << "here 1:\n";
+
   posx = configMgr->SetInputBranch<double>("x");
   posy = configMgr->SetInputBranch<double>("y");
   posz = configMgr->SetInputBranch<double>("z");
-  // std::cout << "here 2: " << posx << "\n";
-  // configMgr->GetInputTree()->SetBranchAddress("x", posx);
 
   output_t = configMgr->SetOutputBranch<std::vector<double>>("t");
   output_x = configMgr->SetOutputBranch<double>("x");
@@ -32,7 +30,8 @@ void AnaTCT::initialize(BetaConfigMgr *configMgr){
     output_tmax[i] = configMgr->SetOutputBranch<double>("tmax" + current_ch);
     output_rise[i] = configMgr->SetOutputBranch<double>("rise" + current_ch);
     output_area[i] = configMgr->SetOutputBranch<double>("area" + current_ch);
-    // output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
+    output_fwhm[i] = configMgr->SetOutputBranch<double>("fwhm" + current_ch);
+    output_rms[i] = configMgr->SetOutputBranch<double>("rms" + current_ch);
 
     // output_cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("cfd" + current_ch);
     output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
@@ -65,17 +64,18 @@ void AnaTCT::execute(BetaConfigMgr *configMgr){
     auto wave_pt = wm::FindSignalMax(*w[ch], *t);
     auto rise = wm::CalcRiseTime(*w[ch], *t, wave_pt.index);
     auto area = wm::CalcPulseArea(*w[ch], *t, wave_pt.index);
-    // auto fwhm = wm::CalcFWHM(*w[ch], *t, wave_pt.index);
+    auto fwhm = wm::CalcFWHM(*w[ch], *t, wave_pt.index);
+    auto rms = wm::CalcNoise(*w[ch], 0.25);
     // auto cfd_times = wm::CalcCFDTime(*w[ch], *t, wave_pt.index, 0.1, 0.1);
 
     *output_pmax[ch] = wave_pt.v;
     *output_tmax[ch] = wave_pt.t;
     *output_rise[ch] = rise;
     *output_area[ch] = area;
-    // *output_fwhm[ch] = fwhm;
+    *output_fwhm[ch] = fwhm;
+    *output_rms[ch] = rms;
 
     // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
-
   }
 
 }
