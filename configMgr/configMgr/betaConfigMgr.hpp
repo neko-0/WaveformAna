@@ -47,14 +47,20 @@ struct BranchWrapper : public BaseBranch
 {
 private:
   std::string name_;
-  dtype *branch_ = nullptr;
   using btype = dtype;
+  bool delete_ = false;
+  dtype *branch_ = nullptr;
 public:
   BranchWrapper(){};
   BranchWrapper(const std::string &name):name_(name){};
-  ~BranchWrapper(){ if(branch_) delete branch_; };
+  ~BranchWrapper(){
+    if(delete_ && branch_){
+      // LOG_INFO("clean up branch: " + name_)
+      delete branch_;
+    }
+  }
 
-  void setup(){ branch_ = new dtype; }
+  void setup(){ branch_ = new dtype; delete_ = true;}
 
   void **branch_addr(){ return (void**)&branch_; }
   btype **branch_dtype_addr(){ return &branch_; }
@@ -68,6 +74,8 @@ public:
       this->branch_->clear();
     }
   }
+
+  void SetAutoDelete(bool value){delete_ = value;}
 };
 
 //==============================================================================
@@ -168,13 +176,21 @@ dtype *BetaConfigMgr::SetInputBranch(const std::string &name)
   if(!this->input_tree) return nullptr;
 
   auto *my_branch = new BranchWrapper<dtype>(name);
+  my_branch->setup();
   this->input_branches_.push_back(my_branch);
 
   auto branch_index = std::pair<std::string, int>(name, this->input_branch_counter_);
   this->input_branch_map_.insert(branch_index);
 
   // this->input_tree->SetBranchAddress(name.c_str(), (dtype**)my_branch->get());
-  this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+
+  if constexpr(is_vector<dtype>::value){
+    LOG_INFO(name + ": dtype=<stl::vector>, buffer/clear will be handle internally");
+    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+  } else {
+    LOG_INFO(name + ": dtype=" + std::string(typeid(dtype).name()));
+    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch());
+  }
 
   this->input_branch_counter_++;
   return my_branch->branch();
@@ -198,7 +214,7 @@ dtype *BetaConfigMgr::SetOutputBranch(const std::string &name)
   if constexpr(is_vector<dtype>::value){
     LOG_INFO(name + ": dtype=<stl::vector>, buffer/clear will be handle internally");
     this->output_vector_branch_index_.push_back(this->output_branch_counter_);
-    my_branch->branch()->reserve(2000);
+    // my_branch->branch()->reserve(2000);
   } else {
     LOG_INFO(name + ": dtype=" + std::string(typeid(dtype).name()));
   }

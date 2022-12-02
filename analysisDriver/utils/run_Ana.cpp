@@ -26,8 +26,8 @@ int main(int argc, char **argv){
   );
   desc.add_options()
   ("help,h", "help message.")
-  ("directory,d", bpo::value<std::string>(), "directory for the input files")
-  ("selector,s", bpo::value<std::string>(), "analysis selector")
+  ("directory,d", bpo::value<std::string>()->required(), "directory for the input files")
+  ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
   // ("config", bpo::value<std::string>(), "configuration file")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
