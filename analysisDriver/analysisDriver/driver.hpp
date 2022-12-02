@@ -25,9 +25,10 @@ protected:
 
 public:
 
-  virtual ~AnalysisDriver(){delete configMgr;}
+  virtual ~AnalysisDriver(){delete configMgr;};
 
   virtual void AnalysisSelector(const std::string &name);
+  virtual void AddExternalConfig(const std::string &name);
   virtual void Initialize(const std::string &fname);
   virtual void EventLoop();
   virtual void DoAnalysis();

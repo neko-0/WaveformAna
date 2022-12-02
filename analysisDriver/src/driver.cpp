@@ -66,6 +66,11 @@ void AnalysisDriver::ReportSatus(){
 }
 
 //==============================================================================
+void AnalysisDriver::AddExternalConfig(const std::string &name){
+  this->configMgr->ext_config_name(name);
+}
+
+//==============================================================================
 void AnalysisDriver::Initialize(const std::string &fname){
   LOG_INFO("Start initialization with file: " + fname);
   this->configMgr->input_filename(fname);

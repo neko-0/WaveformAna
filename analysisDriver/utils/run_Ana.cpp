@@ -8,9 +8,14 @@
 
 namespace bpo = boost::program_options;
 
-void RunAnalysis(const std::string &ana, const std::string &fname){
+void RunAnalysis(
+    const std::string &ana,
+    const std::string &fname,
+    const std::string &ext_config)
+{
   auto ana_driver = AnalysisDriver();
   ana_driver.AnalysisSelector(ana);
+  ana_driver.AddExternalConfig(ext_config);
   ana_driver.Initialize(fname);
   ana_driver.EventLoop();
   ana_driver.Finalize();
@@ -28,7 +33,7 @@ int main(int argc, char **argv){
   ("help,h", "help message.")
   ("directory,d", bpo::value<std::string>()->required(), "directory for the input files")
   ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
-  // ("config", bpo::value<std::string>(), "configuration file")
+  ("config", bpo::value<std::string>()->default_value(""), "configuration file")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
   // ("mp", bpo::bool_switch()->default_value(false), "internal mp")
@@ -65,7 +70,7 @@ int main(int argc, char **argv){
   // do analysis
   for(auto &fname : files){
     LOG_INFO("Staring analysis with input file: " + fname);
-    RunAnalysis(selector, fname);
+    RunAnalysis(selector, fname, vm["config"].as<std::string>());
   }
 
   return 0;
