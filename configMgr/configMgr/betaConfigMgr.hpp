@@ -10,6 +10,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TLeaf.h>
 
 //==============================================================================
 
@@ -181,21 +182,33 @@ dtype *BetaConfigMgr::SetInputBranch(const std::string &name)
 
   auto *my_branch = new BranchWrapper<dtype>(name);
   my_branch->setup();
-  this->input_branches_.push_back(my_branch);
-
-  auto branch_index = std::pair<std::string, int>(name, this->input_branch_counter_);
-  this->input_branch_map_.insert(branch_index);
 
   // this->input_tree->SetBranchAddress(name.c_str(), (dtype**)my_branch->get());
-
+  int branch_status = 0;
   if constexpr(is_vector<dtype>::value){
     LOG_INFO(name + ": dtype=<stl::vector>, buffer/clear will be handle internally");
-    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+    branch_status = this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+    if(branch_status == -2){
+      // in case of C style array.
+      TLeaf *my_leaf = this->input_tree->GetBranch(name.c_str())->GetLeaf(name.c_str());
+      auto fulllength = my_leaf->GetLenStatic();
+      my_branch->branch()->resize(fulllength);
+      auto b = my_branch->branch();
+      branch_status = this->input_tree->SetBranchAddress(name.c_str(), &b->front());
+    }
   } else {
     LOG_INFO(name + ": dtype=" + std::string(typeid(dtype).name()));
-    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch());
+    branch_status = this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch());
   }
 
+  if(branch_status!= 0){
+    LOG_WARNING("Set branch status " + std::to_string(branch_status) + " for " + name);
+    return nullptr;
+  }
+
+  this->input_branches_.push_back(my_branch);
+  auto branch_index = std::pair<std::string, int>(name, this->input_branch_counter_);
+  this->input_branch_map_.insert(branch_index);
   this->input_branch_counter_++;
   return my_branch->branch();
 }
