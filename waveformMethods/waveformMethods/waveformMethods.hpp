@@ -2,6 +2,7 @@
 #define WAVEFORMMETHODS_H
 
 #include <vector>
+#include <omp.h>
 
 namespace waveform_methods
 {

@@ -28,7 +28,7 @@ double waveform_methods::CalcBaseline(
   auto lower = std::lower_bound(t_trace.begin(), t_trace.end(), tmin);
   auto upper = std::lower_bound(t_trace.begin(), t_trace.end(), tmax);
   int dN = std::distance(lower, upper);
-  double sum = std::accumulate(lower, upper, 0);
+  double sum = std::accumulate(lower, upper, 0.0);
 
   return sum / dN;
 }

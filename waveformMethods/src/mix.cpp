@@ -21,6 +21,8 @@ MixParamsSet1 waveform_methods::CalcMaxNoiseBase(
   double avg = 0, sq = 0;
   double neg_max = 0, pos_max = 0;
   int neg_max_i = 0, pos_max_i = 0;
+
+  #pragma omp simd reduction(+:avg,sq)
   for(int i = 0; i < v_trace.size(); i++){
     auto value = v_trace.at(i);
     if(i >= start && i <= end){
@@ -37,8 +39,9 @@ MixParamsSet1 waveform_methods::CalcMaxNoiseBase(
     }
   }
 
-  avg /= (end - start);
-  sq /= (end - start);
+  double ndiff = end - start;
+  avg /= ndiff;
+  sq /= ndiff;
   double rms = pow(sq - avg*avg, 0.5);
 
   return MixParamsSet1{avg, rms, neg_max_i, pos_max_i, neg_max, pos_max};

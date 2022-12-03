@@ -10,17 +10,25 @@ double waveform_methods::CalcNoise(
   const int &imin,
   const int &imax)
 {
-  const auto &begin = v_trace.begin() + imin;
-  const auto &end = v_trace.begin() + imax;
+  // const auto &begin = v_trace.begin() + imin;
+  // const auto &end = v_trace.begin() + imax;
+  // double avg = 0, sq = 0;
+  // for(auto i=begin; i!=end; i++){
+  //   avg += *i;
+  //   sq += (*i)*(*i);
+  // }
 
   double avg = 0, sq = 0;
-  for(auto i=begin; i!=end; i++){
-    avg += *i;
-    sq += (*i)*(*i);
+  #pragma omp simd reduction(+:avg,sq)
+  for(int i=imin; i!=imax; i++){
+    avg += v_trace.at(i);
+    sq += v_trace.at(i)*v_trace.at(i);
   }
 
-  avg /= (imax - imin);
-  sq /= (imax - imin);
+  double ndiff = (imax - imin);
+  avg /= ndiff;
+  sq /= ndiff;
+
   return pow(sq - avg*avg, 0.5);
 }
 
