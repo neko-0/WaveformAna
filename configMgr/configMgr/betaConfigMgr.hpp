@@ -11,6 +11,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TLeaf.h>
+#include <TROOT.h>
 
 //==============================================================================
 
