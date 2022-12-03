@@ -16,25 +16,29 @@ struct AnaSSRL : BaseAna {
   virtual void finalize(BetaConfigMgr *configMgr);
 
 private:
-  const int ch_start_ = 3;
-  static const int num_ch_ = 3;
-
+  const int ch_start_ = 1;
+  static const int num_ch_ = 4;
+  std::vector<int> active_ch_ = {};
+  bool store_waveform = false;
+  
   // input variables
   std::vector<double> *w[num_ch_];
   std::vector<double> *t[num_ch_];
 
   // output variables
-  double *output_pmax[num_ch_];
-  double *output_tmax[num_ch_];
-  double *output_rise[num_ch_];
-  double *output_area[num_ch_];
-  double *output_fwhm[num_ch_];
+  bool *output_basecorr[num_ch_];
+  int *output_nsignal[num_ch_];
+  std::vector<double> *output_rise[num_ch_];
+  std::vector<double> *output_area[num_ch_];
+  std::vector<double> *output_fwhm[num_ch_];
+  std::vector<double> *output_20cfd[num_ch_];
+  std::vector<double> *output_50cfd[num_ch_];
+  std::vector<double> *output_pmax[num_ch_];
+  std::vector<double> *output_tmax[num_ch_];
+
 
   std::vector<double> *output_w[num_ch_];
   std::vector<double> *output_t[num_ch_];
-  std::vector<double> *output_cfd[num_ch_];
-  std::vector<double> *output_npmax[num_ch_];
-  std::vector<double> *output_ntmax[num_ch_];
 };
 
 #endif
