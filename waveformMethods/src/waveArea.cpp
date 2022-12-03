@@ -18,7 +18,7 @@ index
 double waveform_methods::_CalcPulseArea(
   const TraceD &v_trace,
   const TraceD &t_trace,
-  int lstart_i, int rstart_i,
+  const int &lstart, const int &rstart,
   const double &baseline/*= 0.0*/)
 {
   int trace_size = v_trace.size();
@@ -26,6 +26,8 @@ double waveform_methods::_CalcPulseArea(
   bool rstop = false;
   double lpulse_area = 0.0;
   double rpulse_area = 0.0;
+  int lstart_i = lstart;
+  int rstart_i = rstart;
   // left side of the pulse
   while(true){
     if(lstart_i < 0) lstop=true;

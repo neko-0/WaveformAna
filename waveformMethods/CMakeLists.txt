@@ -5,6 +5,8 @@ include(GNUInstallDirs)
 
 add_library(WaveformMethods SHARED
   src/cfdTime.cpp
+  src/baseline.cpp
+  src/mix.cpp
   src/noise.cpp
   src/riseTime.cpp
   src/waveArea.cpp
