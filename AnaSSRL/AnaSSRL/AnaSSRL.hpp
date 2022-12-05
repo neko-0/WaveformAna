@@ -19,8 +19,10 @@ private:
   const int ch_start_ = 1;
   static const int num_ch_ = 4;
   std::vector<int> active_ch_ = {};
-  bool store_waveform = false;
-  
+  bool store_waveform = true;
+  bool use_single_t_trace = true;
+  bool found_single_t_trace = false;
+
   // input variables
   std::vector<double> *w[num_ch_];
   std::vector<double> *t[num_ch_];

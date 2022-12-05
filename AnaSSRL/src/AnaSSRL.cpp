@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <omp.h>
 
 namespace wm = waveform_methods;
 
@@ -11,12 +12,12 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
   for(int i = 0; i < this->num_ch_; i++){
     // input branches
     std::string current_ch = std::to_string(ch_start_ + i);
-
     w[i] = configMgr->SetInputBranch<std::vector<double>>("w" + current_ch);
     if(!w[i]) continue;
-
     t[i] = configMgr->SetInputBranch<std::vector<double>>("t" + current_ch);
 
+    active_ch_.push_back(i);
+    
     // output branches
     output_basecorr[i] = configMgr->SetOutputBranch<bool>("basecorr" + current_ch);
     output_nsignal[i] = configMgr->SetOutputBranch<int>("nsignal" + current_ch);
@@ -29,18 +30,28 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     output_50cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("20cfd" + current_ch);
 
     if(store_waveform){
-      output_t[i] = configMgr->SetOutputBranch<std::vector<double>>("t" + current_ch);
       output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
+      if(use_single_t_trace){
+        if(found_single_t_trace){
+          output_t[i] = nullptr;
+          continue;
+        }
+        output_t[i] = configMgr->SetOutputBranch<std::vector<double>>("t");
+        found_single_t_trace = true;
+        continue;
+      }
+      output_t[i] = configMgr->SetOutputBranch<std::vector<double>>("t" + current_ch);
     }
-
-    active_ch_.push_back(i);
   }
+
+  LOG_INFO("number of active chanenls " + std::to_string(active_ch_.size()));
 
   LOG_INFO("external config " + configMgr->ext_config_name());
 }
 
 void AnaSSRL::execute(BetaConfigMgr *configMgr){
 
+  #pragma omp parallel for
   for(auto &ch : active_ch_){
     if(w[ch]->size() == 0){
       LOG_WARNING("Trace size 0");
@@ -59,7 +70,7 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
       polarity = -1.0;
       // abs_max = -1.0*mix_params.neg_max;
     }
-    double threshold = 5.0 * mix_params.rms;
+    double threshold = 10.0 * mix_params.rms;
 
     for(int i=0; i < w[ch]->size(); i++){
       w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
@@ -67,12 +78,16 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
       // output_t[ch]->emplace_back(t[ch]->at(i));
     }
 
-    auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], threshold);
+    // auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], threshold);
+    auto n_wave_pts = wm::FindMultipleSignalMaxAlt1(*w[ch], *t[ch], threshold, 5);
 
     *output_basecorr[ch] = wm::MultiSignalBaselineCorrection(
       n_wave_pts, *w[ch], *t[ch], 0.5, 30e-9, 2e-9);
 
     // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
+    // #pragma omp parallel for
+    // for(int pt_i=0; pt_i < n_wave_pts.size(); pt_i++){
+    //   auto pt = n_wave_pts.at(pt_i);
     for(auto &pt : n_wave_pts){
       if(pt.index < 0) continue;
       output_pmax[ch]->push_back(pt.v);
@@ -87,6 +102,7 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
 
     if(store_waveform){
       std::move(w[ch]->begin(), w[ch]->end(), std::back_inserter(*output_w[ch]));
+      if(!output_t[ch]) continue;
       std::move(t[ch]->begin(), t[ch]->end(), std::back_inserter(*output_t[ch]));
     }
   }
