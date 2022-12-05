@@ -121,3 +121,75 @@ WavePoints waveform_methods::FindMultipleSignalMax(
   return _FindMultipleSignalMax(
     v_trace, t_trace, 0, v_trace.size(), threshold, scale);
 }
+
+//==============================================================================
+WavePoints waveform_methods::_FindMultipleSignalMaxAlt1(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const int &start_i,
+  const int &end_i,
+  const double &threshold,
+  const int &acceptance)
+{
+  WavePoints max_pts = {};
+
+  double pmax = 0.0;
+  int pmax_index = 0;
+  bool is_signal = false;
+  int decrease_counter = 0;
+  for(int i = start_i; i < end_i; i++)
+  {
+    double v_value = v_trace.at(i);
+    double vdiff = v_value - v_trace.at(i-1);
+    if(!is_signal) // trying to find the 1st pmax
+    {
+      if(vdiff < 0){
+        pmax = v_value;
+        continue;
+      }
+      if(v_value < threshold) continue; // need to be at least greater than the threshold
+      if(v_value < pmax) continue;
+      pmax = v_value; // update current pmax value
+      pmax_index = i;
+      is_signal = true;
+    }
+    else // continue to update pmax
+    {
+      if(v_value > pmax)
+      {
+          pmax = v_value;
+          pmax_index = i;
+          decrease_counter = 0;
+      } else if(vdiff < 0){
+        decrease_counter++;
+      }
+
+      if(decrease_counter >= acceptance){
+        max_pts.push_back( WavePoint{pmax_index, pmax, t_trace.at(pmax_index)} );
+        pmax = v_value;
+        pmax_index = i;
+        is_signal = false;
+        decrease_counter = 0;
+      } else if(i == end_i - 1) // sotre the last point if no others are found.
+      {
+          max_pts.push_back( WavePoint{pmax_index, pmax, t_trace.at(pmax_index)} );
+      }
+    }
+  }
+
+  // feed a default value if nothing is found.
+  if(max_pts.size() == 0) max_pts.push_back( WavePoint{-1, 10e11, 10e11} );
+
+  return max_pts;
+}
+
+//==============================================================================
+WavePoints waveform_methods::FindMultipleSignalMaxAlt1(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const double &threshold,
+  const int &acceptance)
+{
+  return _FindMultipleSignalMaxAlt1(
+    v_trace, t_trace, 1, v_trace.size(), threshold, acceptance);
+}
