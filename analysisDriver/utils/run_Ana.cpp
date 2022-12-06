@@ -3,7 +3,9 @@
 #include "utilities/getFiles.hpp"
 #include "utilities/logger.hpp"
 
-
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
 #include <boost/program_options.hpp>
 
 namespace bpo = boost::program_options;
@@ -33,7 +35,8 @@ int main(int argc, char **argv){
   ("help,h", "help message.")
   ("directory,d", bpo::value<std::string>()->required(), "directory for the input files")
   ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
-  ("config", bpo::value<std::string>()->default_value(""), "configuration file")
+  ("config,c", bpo::value<std::string>()->default_value(""), "configuration file")
+  ("mp", bpo::bool_switch()->default_value(false), "internal mp")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
   // ("mp", bpo::bool_switch()->default_value(false), "internal mp")
@@ -65,6 +68,30 @@ int main(int argc, char **argv){
   LOG_INFO("Here is list of input files ");
   for(auto &fname : files){
     LOG_INFO(fname);
+  }
+
+  // do analysis uising fork
+  if(vm["mp"].as<bool>()){
+    LOG_INFO("Using internal MP.")
+    int fcount = 0;
+    int maxf = 5;
+    int status = 0;
+    for(auto &fname : files){
+      pid_t pid = fork();
+      if(pid==0){ // only child run the job
+        LOG_INFO("Staring analysis with input file: " + fname);
+        RunAnalysis(selector, fname, vm["config"].as<std::string>());
+        exit(0);
+      } else{
+        fcount++;
+      }
+      if(fcount == maxf){
+        wait(&status);
+        fcount = 0;
+      }
+    }
+    wait(&status);
+    return 0;
   }
 
   // do analysis
