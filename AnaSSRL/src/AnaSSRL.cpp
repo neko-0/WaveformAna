@@ -17,7 +17,7 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     t[i] = configMgr->SetInputBranch<std::vector<double>>("t" + current_ch);
 
     active_ch_.push_back(i);
-    
+
     // output branches
     output_basecorr[i] = configMgr->SetOutputBranch<bool>("basecorr" + current_ch);
     output_nsignal[i] = configMgr->SetOutputBranch<int>("nsignal" + current_ch);
@@ -70,7 +70,7 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
       polarity = -1.0;
       // abs_max = -1.0*mix_params.neg_max;
     }
-    double threshold = 10.0 * mix_params.rms;
+    double threshold = 5.0 * mix_params.rms;
 
     for(int i=0; i < w[ch]->size(); i++){
       w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
