@@ -10,6 +10,7 @@ BetaConfigMgr::BetaConfigMgr(const std::string &filename)
 bool BetaConfigMgr::Initialize()
 {
   ROOT::EnableThreadSafety();
+  ROOT::EnableImplicitMT()
   LOG_INFO("Initializing with input file: " + this->input_filename_ );
   this->input_file = TFile::Open(this->input_filename_.c_str());
   this->is_open_ = !this->input_file->IsZombie();
