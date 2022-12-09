@@ -76,21 +76,24 @@ int main(int argc, char **argv){
     int fcount = 0;
     int maxf = 5;
     int status = 0;
+    int total_jobs = 0;
     for(auto &fname : files){
+      fcount++;
+      total_jobs++;
       pid_t pid = fork();
       if(pid==0){ // only child run the job
         LOG_INFO("Staring analysis with input file: " + fname);
         RunAnalysis(selector, fname, vm["config"].as<std::string>());
         exit(0);
-      } else{
-        fcount++;
       }
-      if(fcount == maxf){
+      for(; fcount >= maxf; fcount--){
         wait(&status);
-        fcount = 0;
+        total_jobs--;
       }
     }
-    wait(&status);
+    for(; total_jobs!=0; total_jobs--){ // last waiting call
+      wait(&status);
+    }
     return 0;
   }
 
