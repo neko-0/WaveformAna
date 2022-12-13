@@ -21,6 +21,7 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     // output branches
     output_basecorr[i] = configMgr->SetOutputBranch<bool>("basecorr" + current_ch);
     output_nsignal[i] = configMgr->SetOutputBranch<int>("nsignal" + current_ch);
+    output_rms[i] = configMgr->SetOutputBranch<double>("rms" + current_ch);
     output_pmax[i] = configMgr->SetOutputBranch<std::vector<double>>("pmax" + current_ch);
     output_tmax[i] = configMgr->SetOutputBranch<std::vector<double>>("tmax" + current_ch);
     output_rise[i] = configMgr->SetOutputBranch<std::vector<double>>("rise" + current_ch);
@@ -28,6 +29,7 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     output_fwhm[i] = configMgr->SetOutputBranch<std::vector<double>>("fwhm" + current_ch);
     output_20cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("20cfd" + current_ch);
     output_50cfd[i] = configMgr->SetOutputBranch<std::vector<double>>("20cfd" + current_ch);
+    output_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<double>>("tmaxdiff" + current_ch);
 
     if(store_waveform){
       output_w[i] = configMgr->SetOutputBranch<std::vector<double>>("w" + current_ch);
@@ -44,9 +46,9 @@ void AnaSSRL::initialize(BetaConfigMgr *configMgr){
     }
   }
 
-  LOG_INFO("number of active chanenls " + std::to_string(active_ch_.size()));
+  LOG_INFO("number of active chanenls: " + std::to_string(active_ch_.size()));
 
-  LOG_INFO("external config " + configMgr->ext_config_name());
+  LOG_INFO("external config: " + configMgr->ext_config_name());
 }
 
 void AnaSSRL::execute(BetaConfigMgr *configMgr){
@@ -78,11 +80,11 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
       // output_t[ch]->emplace_back(t[ch]->at(i));
     }
 
-    // auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], threshold);
-    auto n_wave_pts = wm::FindMultipleSignalMaxAlt1(*w[ch], *t[ch], threshold, 5);
+    auto n_wave_pts = wm::FindMultipleSignalMax(*w[ch], *t[ch], threshold);
+    // auto n_wave_pts = wm::FindMultipleSignalMaxAlt1(*w[ch], *t[ch], threshold, 5);
 
     *output_basecorr[ch] = wm::MultiSignalBaselineCorrection(
-      n_wave_pts, *w[ch], *t[ch], 0.5, 30e-9, 2e-9);
+      n_wave_pts, *w[ch], *t[ch], 0.5, 5e-9, 5e-9);
 
     // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
     // #pragma omp parallel for
@@ -90,15 +92,22 @@ void AnaSSRL::execute(BetaConfigMgr *configMgr){
     //   auto pt = n_wave_pts.at(pt_i);
     for(auto &pt : n_wave_pts){
       if(pt.index < 0) continue;
+      if(!output_tmax[ch]->empty()){
+        output_tmax_diff[ch]->push_back(pt.t - output_tmax[ch]->back());
+      } else {
+        output_tmax_diff[ch]->push_back(0.0);
+      }
       output_pmax[ch]->push_back(pt.v);
       output_tmax[ch]->push_back(pt.t);
       output_rise[ch]->push_back(wm::CalcRiseTime(*w[ch], *t[ch], pt.index));
       output_area[ch]->push_back(wm::CalcPulseArea(*w[ch], *t[ch], pt.index));
-      output_20cfd[ch]->push_back(wm::CalcCFDTime(*w[ch], *t[ch], pt.index, 0.2));
-      output_50cfd[ch]->push_back(wm::CalcCFDTime(*w[ch], *t[ch], pt.index, 0.5));
+      auto cfd = wm::CalcCFDTime(*w[ch], *t[ch], pt.index, 0.2, 0.5, 0.3);
+      output_20cfd[ch]->push_back(cfd.at(0));
+      output_50cfd[ch]->push_back(cfd.at(1));
       output_fwhm[ch]->push_back(wm::CalcFWHM(*w[ch], *t[ch], pt.index));
     }
     *output_nsignal[ch] = output_pmax[ch]->size();
+    *output_rms[ch] = mix_params.rms;
 
     if(store_waveform){
       std::move(w[ch]->begin(), w[ch]->end(), std::back_inserter(*output_w[ch]));
