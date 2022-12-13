@@ -184,8 +184,15 @@ namespace waveform_methods
     const TraceD &v_trace,
     const TraceD &t_trace,
     const int &max_i,
-    const double start_frac,
-    const double incr_size);
+    const double &start_frac,
+    const double &incr_size);
+  std::vector<double> CalcCFDTime(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const int &max_i,
+    const double &start_frac,
+    const double &stop_frac,
+    const double &incr_size);
   double CalcCFDTime(
     const TraceD &v_trace,
     const TraceD &t_trace,
