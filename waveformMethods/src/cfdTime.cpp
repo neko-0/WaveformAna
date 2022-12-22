@@ -75,23 +75,46 @@ std::vector<double> waveform_methods::CalcCFDTime(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &max_i,
-  const double start_frac,
-  const double incr_size)
+  const double &start_frac,
+  const double &stop_frac,
+  const double &incr_size)
 {
+  if(incr_size > 1.0 || incr_size < 0.0) throw;
+  if(stop_frac < start_frac || start_frac < 0.0) throw;
+
   std::vector<double> cfd_times = {};
-  int incr = 0;
   int trace_size = v_trace.size();
+  int start_i = max_i;
   double max_value = v_trace.at(max_i);
-  double frac_0 = start_frac;
-  while(frac_0 < 1.0){
+
+  bool end_iter = false;
+  double frac_0 = stop_frac;
+  while(frac_0 >= start_frac){
     double frac_value = max_value * frac_0;
     auto wav_pt = _CalcCFDTime(
-      v_trace, t_trace, max_i, frac_value, trace_size, EdgeType::Rise);
+      v_trace, t_trace, start_i, frac_value, trace_size, EdgeType::Rise);
     cfd_times.push_back(wav_pt.t);
-    frac_0 += incr_size;
+    start_i = wav_pt.index;
+    frac_0 -= incr_size;
+    if(frac_0 < start_frac && !end_iter){
+      frac_0 = start_frac;
+      end_iter = true;
+    }
   }
 
   return cfd_times;
+}
+
+//==============================================================================
+std::vector<double> waveform_methods::CalcCFDTime(
+  const TraceD &v_trace,
+  const TraceD &t_trace,
+  const int &max_i,
+  const double &start_frac,
+  const double &incr_size)
+{
+  return waveform_methods::CalcCFDTime(
+    v_trace, t_trace, max_i, start_frac, 1.0, incr_size);
 }
 
 //==============================================================================

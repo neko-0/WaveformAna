@@ -2,6 +2,7 @@
 #define WAVEFORMMETHODS_H
 
 #include <vector>
+#include <omp.h>
 
 namespace waveform_methods
 {
@@ -10,6 +11,15 @@ namespace waveform_methods
       int index;
       double v; // v(oltage) value
       double t; // t(ime) value
+  };
+
+  struct MixParamsSet1{
+    double baseline;
+    double rms;
+    int neg_max_i;
+    int pos_max_i;
+    double neg_max;
+    double pos_max;
   };
 
   enum EdgeType{ Rise, Fall };
@@ -53,6 +63,18 @@ namespace waveform_methods
     const int &end_i,
     const double &threshold,
     const double &scale = 2.0);
+  WavePoints _FindMultipleSignalMaxAlt1(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const int &start_i,
+    const int &end_i,
+    const double &threshold,
+    const int &acceptance);
+  WavePoints FindMultipleSignalMaxAlt1(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const double &threshold,
+    const int &acceptance);
 
   //============================================================================
   WavePoints _FindThresholdPoints(
@@ -120,6 +142,19 @@ namespace waveform_methods
     const TraceD &t_trace,
     const double &tmin,
     const double &tmax);
+  bool MultiSignalBaselineCorrection(
+    WavePoints &signals,
+    TraceD &v_trace,
+    const double &frac_npts,
+    const int &npts_forward,
+    const int &npts_backward);
+  bool MultiSignalBaselineCorrection(
+    WavePoints &signals,
+    TraceD &v_trace,
+    const TraceD &t_trace,
+    const double &frac_npts,
+    const double &forward_time,
+    const double &backward_time);
 
   //============================================================================
   double CalcPulseArea(
@@ -140,15 +175,24 @@ namespace waveform_methods
   double _CalcPulseArea(
     const TraceD &v_trace,
     const TraceD &t_trace,
-    int lstart_i, int rstart_i, const double &baseline= 0.0);
+    const int &lstart,
+    const int &rstart,
+    const double &baseline= 0.0);
 
   //============================================================================
   std::vector<double> CalcCFDTime(
     const TraceD &v_trace,
     const TraceD &t_trace,
     const int &max_i,
-    const double start_frac,
-    const double incr_size);
+    const double &start_frac,
+    const double &incr_size);
+  std::vector<double> CalcCFDTime(
+    const TraceD &v_trace,
+    const TraceD &t_trace,
+    const int &max_i,
+    const double &start_frac,
+    const double &stop_frac,
+    const double &incr_size);
   double CalcCFDTime(
     const TraceD &v_trace,
     const TraceD &t_trace,
@@ -168,6 +212,15 @@ namespace waveform_methods
     const TraceD &t_trace,
     const int &max_i,
     const double &frac=0.5);
+
+  //============================================================================
+  MixParamsSet1 CalcMaxNoiseBase(
+    const TraceD &v_trace,
+    const int &start,
+    const int &end);
+  MixParamsSet1 CalcMaxNoiseBase(
+    const TraceD &v_trace,
+    const double &frac);
 };
 
 #endif
