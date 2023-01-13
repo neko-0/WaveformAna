@@ -37,6 +37,7 @@ int main(int argc, char **argv){
   ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
   ("config,c", bpo::value<std::string>()->default_value(""), "configuration file")
   ("mp", bpo::bool_switch()->default_value(false), "internal mp")
+  ("nfile,n", bpo::value<int>()->default_value(5), "number of files for mp")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
   // ("mp", bpo::bool_switch()->default_value(false), "internal mp")
@@ -74,7 +75,7 @@ int main(int argc, char **argv){
   if(vm["mp"].as<bool>()){
     LOG_INFO("Using internal MP.")
     int fcount = 0;
-    int maxf = 5;
+    int maxf = vm["nfile"].as<int>();
     int status = 0;
     int total_jobs = 0;
     for(auto &fname : files){
