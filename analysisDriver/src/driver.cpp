@@ -55,12 +55,14 @@ void AnalysisDriver::AnalysisSelector(const std::string &name){
 void AnalysisDriver::ReportSatus(){
   Second dt = Time::now() - t0_;
   int dN = (counter_ - previous_count_);
-  int evt_s =  dN / dt.count();
+  float evt_s =  dN / dt.count();
+  int eta = dN ? (total_entries_ - counter_) / evt_s / 60 : -1;
   int rss = get_ram();
   LOG_INFO("Proccesed number of events: "
     + std::to_string(counter_) + "/" + total_entries_ + ", "
     + std::to_string(evt_s) + " evt/s, "
-    + std::to_string(rss) + " KB");
+    + std::to_string(rss) + " KB, "
+    + std::to_string(eta) + " ETA(min)");
   previous_count_ = counter_;
   t0_ = Time::now();
 }
