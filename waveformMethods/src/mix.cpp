@@ -3,7 +3,7 @@
 #include <math.h>
 #include <numeric>
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
 /**
  * Calculate the noise, baseline, and both negatve & positive max index.
@@ -13,7 +13,7 @@ using namespace waveform_methods;
  * @param end Ending index for baseline and noise
  * @return sum of `values`, or 0.0 if `values` is empty.
  */
-MixParamsSet1 waveform_methods::CalcMaxNoiseBase(
+MixParamsSet1 CalcMaxNoiseBase(
   const TraceD &v_trace,
   const int &start,
   const int &end)
@@ -49,10 +49,12 @@ MixParamsSet1 waveform_methods::CalcMaxNoiseBase(
 
 //==============================================================================
 
-MixParamsSet1 waveform_methods::CalcMaxNoiseBase(
+MixParamsSet1 CalcMaxNoiseBase(
   const TraceD &v_trace,
   const double &frac)
 {
   int npts = v_trace.size()*frac;
-  return waveform_methods::CalcMaxNoiseBase(v_trace, 0, npts);
+  return CalcMaxNoiseBase(v_trace, 0, npts);
+}
+
 }

@@ -3,9 +3,9 @@
 #include <math.h>
 #include <numeric>
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
-double waveform_methods::CalcNoise(
+double CalcNoise(
   const TraceD &v_trace,
   const int &imin,
   const int &imax)
@@ -33,24 +33,24 @@ double waveform_methods::CalcNoise(
 }
 
 //==============================================================================
-double waveform_methods::CalcNoise(
+double CalcNoise(
   const TraceD &v_trace,
   const int &npts)
 {
-  return waveform_methods::CalcNoise(v_trace, 0, npts);
+  return CalcNoise(v_trace, 0, npts);
 }
 
 //==============================================================================
-double waveform_methods::CalcNoise(
+double CalcNoise(
   const TraceD &v_trace,
   const double &frac)
 {
   int npts = v_trace.size()*frac;
-  return waveform_methods::CalcNoise(v_trace, 0, npts);
+  return CalcNoise(v_trace, 0, npts);
 }
 
 //==============================================================================
-double waveform_methods::CalcNoise(
+double CalcNoise(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const double &tmin,
@@ -60,5 +60,7 @@ double waveform_methods::CalcNoise(
   auto upper = std::lower_bound(t_trace.begin(), t_trace.end(), tmax);
   int lower_i = std::distance(t_trace.begin(), lower);
   int upper_i = std::distance(t_trace.begin(), upper);
-  return waveform_methods::CalcNoise(v_trace, lower_i, upper_i);
+  return CalcNoise(v_trace, lower_i, upper_i);
+}
+
 }

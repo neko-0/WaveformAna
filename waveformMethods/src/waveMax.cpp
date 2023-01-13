@@ -1,9 +1,9 @@
 #include "waveformMethods/waveformMethods.hpp"
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
 //==============================================================================
-WavePoint waveform_methods::FindSignalMax(
+WavePoint FindSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start,
@@ -22,19 +22,19 @@ WavePoint waveform_methods::FindSignalMax(
     index = i;
   }
 
-  return waveform_methods::WavePoint{index, vmax, tmax};
+  return WavePoint{index, vmax, tmax};
 }
 
 //==============================================================================
-WavePoint waveform_methods::FindSignalMax(
+WavePoint FindSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace)
 {
-  return waveform_methods::FindSignalMax(v_trace, t_trace, 0, v_trace.size());
+  return FindSignalMax(v_trace, t_trace, 0, v_trace.size());
 }
 
 //==============================================================================
-WavePoint waveform_methods::FindSignalMax(
+WavePoint FindSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const double &min,
@@ -55,5 +55,7 @@ WavePoint waveform_methods::FindSignalMax(
     end_i = std::distance(t_trace.begin(), upper);
   }
 
-  return waveform_methods::FindSignalMax(v_trace, t_trace, start_i, end_i);
+  return FindSignalMax(v_trace, t_trace, start_i, end_i);
+}
+
 }

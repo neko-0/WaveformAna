@@ -2,9 +2,9 @@
 
 #include <math.h>
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
-WavePoints waveform_methods::_FindIdenticalSignalMax(
+WavePoints _FindIdenticalSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start, const int &end, const double &baseline)
@@ -35,7 +35,7 @@ WavePoints waveform_methods::_FindIdenticalSignalMax(
 }
 
 //==============================================================================
-WavePoints waveform_methods::FindIdenticalSignalMax(
+WavePoints FindIdenticalSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start, const int &end)
@@ -43,21 +43,19 @@ WavePoints waveform_methods::FindIdenticalSignalMax(
   int trace_size = v_trace.size();
   int start_i = std::min(start, trace_size-1);
   int end_i = std::min(end, trace_size-2);
-  return waveform_methods::_FindIdenticalSignalMax(
-    v_trace, t_trace, start_i, end_i);
+  return _FindIdenticalSignalMax(v_trace, t_trace, start_i, end_i);
 }
 
 //==============================================================================
-WavePoints waveform_methods::FindIdenticalSignalMax(
+WavePoints FindIdenticalSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace)
 {
-  return waveform_methods::_FindIdenticalSignalMax(
-    v_trace, t_trace, 0, v_trace.size());
+  return _FindIdenticalSignalMax(v_trace, t_trace, 0, v_trace.size());
 }
 
 //==============================================================================
-WavePoints waveform_methods::_FindMultipleSignalMax(
+WavePoints _FindMultipleSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start_i,
@@ -112,7 +110,7 @@ WavePoints waveform_methods::_FindMultipleSignalMax(
 }
 
 //==============================================================================
-WavePoints waveform_methods::FindMultipleSignalMax(
+WavePoints FindMultipleSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const double &threshold,
@@ -123,7 +121,7 @@ WavePoints waveform_methods::FindMultipleSignalMax(
 }
 
 //==============================================================================
-WavePoints waveform_methods::_FindMultipleSignalMaxAlt1(
+WavePoints _FindMultipleSignalMaxAlt1(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start_i,
@@ -184,7 +182,7 @@ WavePoints waveform_methods::_FindMultipleSignalMaxAlt1(
 }
 
 //==============================================================================
-WavePoints waveform_methods::FindMultipleSignalMaxAlt1(
+WavePoints FindMultipleSignalMaxAlt1(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const double &threshold,
@@ -192,4 +190,6 @@ WavePoints waveform_methods::FindMultipleSignalMaxAlt1(
 {
   return _FindMultipleSignalMaxAlt1(
     v_trace, t_trace, 1, v_trace.size(), threshold, acceptance);
+}
+
 }
