@@ -1,16 +1,7 @@
 #include "waveformMethods/waveformMethods.hpp"
+#include "waveformMethods/utils.hpp"
 
 namespace waveform_methods {
-
-double LinearInterpolationX(
-  const double &x1,
-  const double &y1,
-  const double &x2,
-  const double &y2,
-  const double &y)
-{
-  return x1 + (y - y1) * (x2 - x1) / (y2 - y1);
-}
 
 double CalcRiseTime(
   const TraceD &v_trace,
@@ -66,11 +57,11 @@ double CalcRiseTime(
     }
   }
 
-  double t1 = LinearInterpolationX(
+  double t1 = Utils::LinearInterpolationX(
       t_trace.at(bot_i), v_trace.at(bot_i),
       t_trace.at(bot_i+1), v_trace.at(bot_i+1), low_b);
 
-  double t2 = LinearInterpolationX(
+  double t2 = Utils::LinearInterpolationX(
       t_trace.at(top_i), v_trace.at(top_i),
       t_trace.at(top_i+1), v_trace.at(top_i+1), high_b);
 

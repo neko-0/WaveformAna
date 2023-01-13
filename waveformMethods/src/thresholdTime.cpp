@@ -1,4 +1,5 @@
 #include "waveformMethods/waveformMethods.hpp"
+#include "waveformMethods/utils.hpp"
 
 namespace waveform_methods {
 
@@ -13,7 +14,7 @@ std::vector<double> FindTimeAtThreshold(
   for(int i = start; i < end; i++){
     double v_value = v_trace.at(i);
     if(v_value >= threshold && v_trace.at(i-1) < threshold){
-      t_value = LinearInterpolationX(
+      t_value = Utils::LinearInterpolationX(
         t_trace.at(i-1), v_trace.at(i-1),
         t_trace.at(i), v_trace.at(i), threshold);
       threhosld_time.push_back(t_value);

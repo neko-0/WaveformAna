@@ -1,4 +1,5 @@
 #include "waveformMethods/waveformMethods.hpp"
+#include "waveformMethods/utils.hpp"
 
 namespace waveform_methods {
 
@@ -42,14 +43,14 @@ WavePoint _CalcCFDTime(
   if(!success) return WavePoint{-1, frac_max, frac_t_value};
 
   if(type == EdgeType::Rise){
-    frac_t_value = LinearInterpolationX(
+    frac_t_value = Utils::LinearInterpolationX(
       t_trace.at(frac_i), v_trace.at(frac_i),
       t_trace.at(frac_i+1), v_trace.at(frac_i+1),
       frac_v_value);
       return WavePoint{frac_i, frac_max, frac_t_value};
   }
   else {
-    frac_t_value = LinearInterpolationX(
+    frac_t_value = Utils::LinearInterpolationX(
       t_trace.at(frac_i-1), v_trace.at(frac_i-1),
       t_trace.at(frac_i), v_trace.at(frac_i),
       frac_v_value);
