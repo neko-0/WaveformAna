@@ -116,12 +116,6 @@ namespace waveform_methods
     const double &high=0.9);
 
   //============================================================================
-  double LinearInterpolationX(
-    const double &x1, const double &y1,
-    const double &x2, const double &y2,
-    const double &y);
-
-  //============================================================================
   double CalcNoise(const TraceD &v_trace, const int &npts);
   double CalcNoise(const TraceD &v_trace, const double &frac);
   double CalcNoise(
@@ -131,30 +125,6 @@ namespace waveform_methods
     const TraceD &v_trace,
     const TraceD &t_trace,
     const double &tmin, const double &tmax);
-
-  //============================================================================
-  double CalcBaseline(
-    const TraceD &v_trace,
-    const int &start,
-    const int &end);
-  double CalcBaseline(
-    const TraceD &v_trace,
-    const TraceD &t_trace,
-    const double &tmin,
-    const double &tmax);
-  bool MultiSignalBaselineCorrection(
-    WavePoints &signals,
-    TraceD &v_trace,
-    const double &frac_npts,
-    const int &npts_forward,
-    const int &npts_backward);
-  bool MultiSignalBaselineCorrection(
-    WavePoints &signals,
-    TraceD &v_trace,
-    const TraceD &t_trace,
-    const double &frac_npts,
-    const double &forward_time,
-    const double &backward_time);
 
   //============================================================================
   double CalcPulseArea(

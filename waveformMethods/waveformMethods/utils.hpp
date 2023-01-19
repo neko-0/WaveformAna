@@ -13,10 +13,17 @@ namespace waveform_methods::Utils {
     const double &x2, const double &y2,
     const double &y);
 
+  std::vector<double> GaussianKernel(
+    const int &window_size,
+    const double &height,
+    const double &mean,
+    const double &sigma);
+
   template<class dtype>
-  dtype MedienFilter(
+  std::vector<dtype> MedianFilter(
     const std::vector<dtype> &data,
     const int &window_size);
+
 
 }
 
