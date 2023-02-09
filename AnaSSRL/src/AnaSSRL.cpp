@@ -27,10 +27,30 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     output_rise[i] = configMgr->SetOutputBranch<std::vector<float>>("rise" + current_ch);
     output_area[i] = configMgr->SetOutputBranch<std::vector<float>>("area" + current_ch);
     output_fwhm[i] = configMgr->SetOutputBranch<std::vector<float>>("fwhm" + current_ch);
-    output_20cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("20cfd" + current_ch);
-    output_50cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("20cfd" + current_ch);
+    output_20cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("cfd20_" + current_ch);
+    output_50cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("cfd50_" + current_ch);
     output_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("tmaxdiff" + current_ch);
     output_raw_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("raw_pmax" + current_ch);
+
+    // output_bucket_corr[i] = configMgr->SetOutputBranch<float>("bucket_corr" + current_ch);
+    output_bucket_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_pmax" + current_ch);
+    output_bucket_tmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax" + current_ch);
+    output_bucket_area[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_area" + current_ch);
+    output_bucket_cfd20[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_" + current_ch);
+    output_bucket_cfd50[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_" + current_ch);
+    output_bucket_index[i] = configMgr->SetOutputBranch<std::vector<int>>("bucket_index" + current_ch);
+    output_bucket_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax_diff" + current_ch);
+    output_bucket_cfd20_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_diff" + current_ch);
+    output_bucket_cfd50_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_diff" + current_ch);
+    output_bucket_pmax[i]->reserve(nbuckets_);
+    output_bucket_tmax[i]->reserve(nbuckets_);
+    output_bucket_area[i]->reserve(nbuckets_);
+    output_bucket_cfd20[i]->reserve(nbuckets_);
+    output_bucket_cfd50[i]->reserve(nbuckets_);
+    output_bucket_index[i]->reserve(nbuckets_);
+    output_bucket_tmax_diff[i]->reserve(nbuckets_);
+    output_bucket_cfd20_diff[i]->reserve(nbuckets_);
+    output_bucket_cfd50_diff[i]->reserve(nbuckets_);
 
     if(store_waveform){
       output_w[i] = configMgr->SetOutputBranch<std::vector<float>>("w" + current_ch);
@@ -119,6 +139,8 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
       output_raw_pmax[ch]->push_back(pt.v);
     }
 
+    bucket_time_difference(ch, -44e-9, 2.08e-9);
+
     if(store_waveform){
       std::move(corr_w.begin(), corr_w.end(), std::back_inserter(*output_corr_w[ch]));
       std::move(w[ch]->begin(), w[ch]->end(), std::back_inserter(*output_w[ch]));
@@ -131,4 +153,69 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
 
 void AnaSSRL::finalize(BetaConfigMgr* const configMgr){
   // pass
+}
+
+void AnaSSRL::bucket_time_difference(
+  const int &ch,
+  const double &bucket_start,
+  const double &bucket_step)
+{
+  int num_filled = output_tmax[ch]->size();
+  for(int i = 0; i < nbuckets_; i++){
+    double lbound = bucket_start + bucket_step * i;
+    double hbound = lbound + bucket_step;
+    int nfilled = 0;
+    int fill_index = -1;
+    for(int j = 0; j < num_filled; j++){
+      auto tmax = output_tmax[ch]->at(j);
+      // auto tmax = output_50cfd[ch]->at(j);
+      if(tmax < lbound || tmax > hbound) continue;
+      if(fill_index == -1){
+        fill_index = j;
+      } else {
+        fill_index = -1;
+        break;
+      }
+    }
+    if(fill_index == -1){
+      output_bucket_pmax[ch]->emplace_back(0.0);
+      output_bucket_tmax[ch]->emplace_back(0.0);
+      output_bucket_area[ch]->emplace_back(0.0);
+      output_bucket_cfd20[ch]->emplace_back(0.0);
+      output_bucket_cfd50[ch]->emplace_back(0.0);
+      output_bucket_index[ch]->emplace_back(-1.0);
+    } else{
+      output_bucket_tmax[ch]->emplace_back(output_tmax[ch]->at(fill_index));
+      output_bucket_pmax[ch]->emplace_back(output_pmax[ch]->at(fill_index));
+      output_bucket_area[ch]->emplace_back(output_area[ch]->at(fill_index));
+      output_bucket_cfd20[ch]->emplace_back(output_20cfd[ch]->at(fill_index));
+      output_bucket_cfd50[ch]->emplace_back(output_50cfd[ch]->at(fill_index));
+      output_bucket_index[ch]->emplace_back(i+1);
+    }
+  }
+
+  // calculate difference
+  for(int i = 0; i < nbuckets_; i++){
+    if(i==0){
+      output_bucket_tmax_diff[ch]->emplace_back(-1.0);
+      output_bucket_cfd20_diff[ch]->emplace_back(-1.0);
+      output_bucket_cfd50_diff[ch]->emplace_back(-1.0);
+      continue;
+    }
+    auto bucket_i_1 = output_bucket_index[ch]->at(i);
+    auto bucket_i_2 = output_bucket_index[ch]->at(i-1);
+    if(bucket_i_1 == -1 || bucket_i_2 == -1){
+      output_bucket_tmax_diff[ch]->emplace_back(-1.0);
+      output_bucket_cfd20_diff[ch]->emplace_back(-1.0);
+      output_bucket_cfd50_diff[ch]->emplace_back(-1.0);
+    } else {
+      int ndiff = bucket_i_1 - bucket_i_2;
+      float tmax_diff = (output_bucket_tmax[ch]->at(i) - output_bucket_tmax[ch]->at(i-1)) / ndiff;
+      float cfd20_diff = (output_bucket_cfd20[ch]->at(i) - output_bucket_cfd20[ch]->at(i-1)) / ndiff;
+      float cfd50_diff = (output_bucket_cfd50[ch]->at(i) - output_bucket_cfd50[ch]->at(i-1)) / ndiff;
+      output_bucket_tmax_diff[ch]->emplace_back(tmax_diff);
+      output_bucket_cfd20_diff[ch]->emplace_back(cfd20_diff);
+      output_bucket_cfd50_diff[ch]->emplace_back(cfd50_diff);
+    }
+  }
 }

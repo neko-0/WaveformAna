@@ -16,15 +16,23 @@ struct AnaSSRL : BaseAna {
   virtual void finalize(BetaConfigMgr* const configMgr);
 
 private:
+  void bucket_time_difference(
+    const int &ch,
+    const double &bucket_start,
+    const double &bucket_step);
+
+private:
   const int ch_start_ = 1;
   static const int num_ch_ = 4;
   std::vector<int> active_ch_ = {};
-  bool store_waveform = true;
+  bool store_waveform = false;
   bool use_single_t_trace = true;
   bool found_single_t_trace = false;
 
   const double fixed_win_min = -0.5e-9;
   const double fixed_win_max = 2.5e-9;
+
+  const int nbuckets_= 28;
 
   // ===========================================================================
   // input variables
@@ -46,6 +54,17 @@ private:
   std::vector<float> *output_tmax[num_ch_];
   std::vector<float> *output_tmax_diff[num_ch_];
   std::vector<float> *output_raw_pmax[num_ch_];
+
+  std::vector<float> *output_bucket_pmax[num_ch_];
+  std::vector<float> *output_bucket_area[num_ch_];
+  std::vector<float> *output_bucket_tmax[num_ch_];
+  std::vector<float> *output_bucket_cfd20[num_ch_];
+  std::vector<float> *output_bucket_cfd50[num_ch_];
+  std::vector<int> *output_bucket_index[num_ch_];
+  std::vector<float> *output_bucket_tmax_diff[num_ch_];
+  std::vector<float> *output_bucket_cfd20_diff[num_ch_];
+  std::vector<float> *output_bucket_cfd50_diff[num_ch_];
+  float *output_bucket_corr[num_ch_];
 
   std::vector<float> *output_w[num_ch_];
   std::vector<float> *output_corr_w[num_ch_];
