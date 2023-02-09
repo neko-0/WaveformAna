@@ -1,5 +1,5 @@
 #include "AnaTCT/AnaTCT.hpp"
-#include "waveformMethods/waveformMethods.hpp"
+#include "waveformMethods/core.hpp"
 
 #include <vector>
 #include <string>
@@ -7,7 +7,7 @@
 
 namespace wm = waveform_methods;
 
-void AnaTCT::initialize(BetaConfigMgr *configMgr){
+void AnaTCT::initialize(BetaConfigMgr* const configMgr){
 
   t = configMgr->SetInputBranch<std::vector<double>>("t0");
 
@@ -38,7 +38,7 @@ void AnaTCT::initialize(BetaConfigMgr *configMgr){
   }
 }
 
-void AnaTCT::execute(BetaConfigMgr *configMgr){
+void AnaTCT::execute(BetaConfigMgr* const configMgr){
 
   const double v_scale = 1.0; // V to mV
   const double t_scale = 1.0; // s to ps
@@ -51,7 +51,7 @@ void AnaTCT::execute(BetaConfigMgr *configMgr){
 
   for(int ch = 0; ch < this->num_ch_; ch++){
     int trace_size = w[ch]->size();
-    double baseline = wm::CalcBaseline(*w[ch], 0, (int)(0.25*trace_size));
+    double baseline = wm::Baseline::CalcBaseline(*w[ch], 0, (int)(0.25*trace_size));
     // inverting signal
     for(int i=0; i < trace_size; i++){
       w[ch]->at(i) -= baseline;
@@ -80,6 +80,6 @@ void AnaTCT::execute(BetaConfigMgr *configMgr){
 
 }
 
-void AnaTCT::finalize(BetaConfigMgr *configMgr){
+void AnaTCT::finalize(BetaConfigMgr* const configMgr){
   // pass
 }

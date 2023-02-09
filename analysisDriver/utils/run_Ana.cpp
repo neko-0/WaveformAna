@@ -3,14 +3,21 @@
 #include "utilities/getFiles.hpp"
 #include "utilities/logger.hpp"
 
-
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
 #include <boost/program_options.hpp>
 
 namespace bpo = boost::program_options;
 
-void RunAnalysis(const std::string &ana, const std::string &fname){
+void RunAnalysis(
+    const std::string &ana,
+    const std::string &fname,
+    const std::string &ext_config)
+{
   auto ana_driver = AnalysisDriver();
   ana_driver.AnalysisSelector(ana);
+  ana_driver.AddExternalConfig(ext_config);
   ana_driver.Initialize(fname);
   ana_driver.EventLoop();
   ana_driver.Finalize();
@@ -28,7 +35,9 @@ int main(int argc, char **argv){
   ("help,h", "help message.")
   ("directory,d", bpo::value<std::string>()->required(), "directory for the input files")
   ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
-  // ("config", bpo::value<std::string>(), "configuration file")
+  ("config,c", bpo::value<std::string>()->default_value(""), "configuration file")
+  ("mp", bpo::bool_switch()->default_value(false), "internal mp")
+  ("nfile,n", bpo::value<int>()->default_value(5), "number of files for mp")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
   // ("mp", bpo::bool_switch()->default_value(false), "internal mp")
@@ -62,10 +71,37 @@ int main(int argc, char **argv){
     LOG_INFO(fname);
   }
 
+  // do analysis uising fork
+  if(vm["mp"].as<bool>()){
+    LOG_INFO("Using internal MP.")
+    int fcount = 0;
+    int maxf = vm["nfile"].as<int>();
+    int status = 0;
+    int total_jobs = 0;
+    for(auto &fname : files){
+      fcount++;
+      total_jobs++;
+      pid_t pid = fork();
+      if(pid==0){ // only child run the job
+        LOG_INFO("Staring analysis with input file: " + fname);
+        RunAnalysis(selector, fname, vm["config"].as<std::string>());
+        exit(0);
+      }
+      for(; fcount >= maxf; fcount--){
+        wait(&status);
+        total_jobs--;
+      }
+    }
+    for(; total_jobs!=0; total_jobs--){ // last waiting call
+      wait(&status);
+    }
+    return 0;
+  }
+
   // do analysis
   for(auto &fname : files){
     LOG_INFO("Staring analysis with input file: " + fname);
-    RunAnalysis(selector, fname);
+    RunAnalysis(selector, fname, vm["config"].as<std::string>());
   }
 
   return 0;

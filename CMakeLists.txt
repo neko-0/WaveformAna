@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 project(WaveformAna VERSION 1.0 DESCRIPTION "WaveformAna")
 
 add_subdirectory(configMgr)

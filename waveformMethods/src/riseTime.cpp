@@ -1,18 +1,9 @@
 #include "waveformMethods/waveformMethods.hpp"
+#include "waveformMethods/utils.hpp"
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
-double waveform_methods::LinearInterpolationX(
-  const double &x1,
-  const double &y1,
-  const double &x2,
-  const double &y2,
-  const double &y)
-{
-  return x1 + (y - y1) * (x2 - x1) / (y2 - y1);
-}
-
-double waveform_methods::CalcRiseTime(
+double CalcRiseTime(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start_index,
@@ -22,7 +13,7 @@ double waveform_methods::CalcRiseTime(
 {
   int max_index = start_index;
   if(max_index < 0){
-      auto wave_max = waveform_methods::FindSignalMax(v_trace, t_trace);
+      auto wave_max = FindSignalMax(v_trace, t_trace);
       max_index = wave_max.index;
   }
 
@@ -66,11 +57,11 @@ double waveform_methods::CalcRiseTime(
     }
   }
 
-  double t1 = waveform_methods::LinearInterpolationX(
+  double t1 = Utils::LinearInterpolationX(
       t_trace.at(bot_i), v_trace.at(bot_i),
       t_trace.at(bot_i+1), v_trace.at(bot_i+1), low_b);
 
-  double t2 = waveform_methods::LinearInterpolationX(
+  double t2 = Utils::LinearInterpolationX(
       t_trace.at(top_i), v_trace.at(top_i),
       t_trace.at(top_i+1), v_trace.at(top_i+1), high_b);
 
@@ -78,13 +69,14 @@ double waveform_methods::CalcRiseTime(
 }
 
 //==============================================================================
-double waveform_methods::CalcFallTime(
+double CalcFallTime(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start_index,
   const double &low,
   const double &high)
 {
-  return waveform_methods::CalcRiseTime(
-      v_trace, t_trace, start_index, low, high, EdgeType::Fall);
+  return CalcRiseTime(v_trace, t_trace, start_index, low, high, EdgeType::Fall);
+}
+
 }

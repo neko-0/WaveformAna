@@ -10,6 +10,8 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TLeaf.h>
+#include <TROOT.h>
 
 //==============================================================================
 
@@ -87,6 +89,7 @@ class BetaConfigMgr : public BaseConfigMgr
   std::string output_filename_ = "output_dummy_name";
   std::string output_treename_ = "wfm";
   std::string output_file_prefix_ = "stats_";
+  std::string ext_config_name_;
 
   bool is_open_ = false;
 
@@ -149,24 +152,27 @@ public:
   BaseBranch *GetInputBranch(const std::string &name);
   BaseBranch *GetOutputBranch(const std::string &name);
 
-  void input_filename(const std::string &value){input_filename_ = value;}
-  std::string input_filename(){return input_filename_;}
-
-  void input_treename(const std::string &value){input_treename_ = value;}
-  std::string input_treename(){return input_treename_;}
-
-  void output_treename(const std::string &value){output_treename_ = value;}
-  std::string output_treename(){return output_treename_;}
-
-  void output_file_prefix(const std::string &value){output_file_prefix_ = value;}
-  std::string output_file_prefix(){return output_file_prefix_;}
-
   TFile *GetInputFile(){return input_file;}
   TTree *GetInputTree(){return input_tree;}
   TFile *GetOutputFile(){return output_file;}
   TTree *GetOutputTree(){return output_tree;}
 
-  int GetInputEntries(){return input_entries_;}
+  const int &GetInputEntries() const {return input_entries_;}
+
+  void input_filename(const std::string &value){input_filename_ = value;}
+  const std::string &input_filename() const {return input_filename_;}
+
+  void input_treename(const std::string &value){input_treename_ = value;}
+  const std::string &input_treename() const {return input_treename_;}
+
+  void output_treename(const std::string &value){output_treename_ = value;}
+  const std::string &output_treename() const {return output_treename_;}
+
+  void output_file_prefix(const std::string &value){output_file_prefix_ = value;}
+  const std::string &output_file_prefix() const {return output_file_prefix_;}
+
+  const std::string &ext_config_name() const {return ext_config_name_;}
+  void ext_config_name(const std::string &value){ext_config_name_ = value;}
 };
 
 //==============================================================================
@@ -177,21 +183,33 @@ dtype *BetaConfigMgr::SetInputBranch(const std::string &name)
 
   auto *my_branch = new BranchWrapper<dtype>(name);
   my_branch->setup();
-  this->input_branches_.push_back(my_branch);
-
-  auto branch_index = std::pair<std::string, int>(name, this->input_branch_counter_);
-  this->input_branch_map_.insert(branch_index);
 
   // this->input_tree->SetBranchAddress(name.c_str(), (dtype**)my_branch->get());
-
+  int branch_status = 0;
   if constexpr(is_vector<dtype>::value){
     LOG_INFO(name + ": dtype=<stl::vector>, buffer/clear will be handle internally");
-    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+    branch_status = this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch_dtype_addr());
+    if(branch_status == -2){
+      // in case of C style array.
+      TLeaf *my_leaf = this->input_tree->GetBranch(name.c_str())->GetLeaf(name.c_str());
+      auto fulllength = my_leaf->GetLenStatic();
+      my_branch->branch()->resize(fulllength);
+      auto b = my_branch->branch();
+      branch_status = this->input_tree->SetBranchAddress(name.c_str(), &b->front());
+    }
   } else {
     LOG_INFO(name + ": dtype=" + std::string(typeid(dtype).name()));
-    this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch());
+    branch_status = this->input_tree->SetBranchAddress(name.c_str(), my_branch->branch());
   }
 
+  if(branch_status!= 0){
+    LOG_WARNING("Set branch status " + std::to_string(branch_status) + " for " + name);
+    return nullptr;
+  }
+
+  this->input_branches_.push_back(my_branch);
+  auto branch_index = std::pair<std::string, int>(name, this->input_branch_counter_);
+  this->input_branch_map_.insert(branch_index);
   this->input_branch_counter_++;
   return my_branch->branch();
 }

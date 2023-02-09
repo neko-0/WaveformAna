@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iostream>
 
-using namespace waveform_methods;
+namespace waveform_methods {
 
 /*==============================================================================
 Finding the pulse area of a signal. Stop when it crosses zero (legacy)
@@ -15,10 +15,10 @@ index
 
   return: (double) value of the pulse area
 ==============================================================================*/
-double waveform_methods::_CalcPulseArea(
+double _CalcPulseArea(
   const TraceD &v_trace,
   const TraceD &t_trace,
-  int lstart_i, int rstart_i,
+  const int &lstart, const int &rstart,
   const double &baseline/*= 0.0*/)
 {
   int trace_size = v_trace.size();
@@ -26,6 +26,8 @@ double waveform_methods::_CalcPulseArea(
   bool rstop = false;
   double lpulse_area = 0.0;
   double rpulse_area = 0.0;
+  int lstart_i = lstart;
+  int rstart_i = rstart;
   // left side of the pulse
   while(true){
     if(lstart_i < 0) lstop=true;
@@ -59,7 +61,7 @@ double waveform_methods::_CalcPulseArea(
 }
 
 //==============================================================================
-double waveform_methods::CalcPulseArea(
+double CalcPulseArea(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &max_index, const double &baseline/*= 0.0*/)
@@ -67,21 +69,20 @@ double waveform_methods::CalcPulseArea(
   int trace_size = v_trace.size();
   int lstart_i = std::min(max_index-1, trace_size-2);
   int rstart_i = std::min(max_index+1, trace_size-2);
-  return waveform_methods::_CalcPulseArea(
-    v_trace, t_trace, lstart_i, rstart_i, baseline);
+  return _CalcPulseArea(v_trace, t_trace, lstart_i, rstart_i, baseline);
 }
 
 //==============================================================================
-double waveform_methods::CalcPulseArea(
+double CalcPulseArea(
     const TraceD &v_trace,
     const TraceD &t_trace)
 {
-  auto vmax = waveform_methods::FindSignalMax(v_trace, t_trace);
-  return waveform_methods::CalcPulseArea(v_trace, t_trace, vmax.index);
+  auto vmax = FindSignalMax(v_trace, t_trace);
+  return CalcPulseArea(v_trace, t_trace, vmax.index);
 }
 
 //==============================================================================
-double waveform_methods::CalcPulseArea(
+double CalcPulseArea(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const int &start_index,
@@ -100,7 +101,7 @@ double waveform_methods::CalcPulseArea(
 }
 
 //==============================================================================
-double waveform_methods::CalcPulseArea(
+double CalcPulseArea(
   const TraceD &v_trace,
   const TraceD &t_trace,
   const double &time_start,
@@ -119,7 +120,9 @@ double waveform_methods::CalcPulseArea(
     end_i = std::distance(t_trace.begin(), upper);
   }
 
-  return waveform_methods::CalcPulseArea(v_trace, t_trace, start_i, end_i);
+  return CalcPulseArea(v_trace, t_trace, start_i, end_i);
+}
+
 }
 
 //==============================================================================
