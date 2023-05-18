@@ -48,10 +48,27 @@ WavePoints FindIdenticalSignalMax(
 
 //==============================================================================
 WavePoints FindIdenticalSignalMax(
+  const TraceD * const v_trace,
+  const TraceD * const t_trace,
+  const int &start, const int &end)
+{
+ return FindIdenticalSignalMax(*v_trace, *t_trace, start, end);
+}
+
+//==============================================================================
+WavePoints FindIdenticalSignalMax(
   const TraceD &v_trace,
   const TraceD &t_trace)
 {
   return _FindIdenticalSignalMax(v_trace, t_trace, 0, v_trace.size());
+}
+
+//==============================================================================
+WavePoints FindIdenticalSignalMax(
+  const TraceD * const v_trace,
+  const TraceD * const t_trace)
+{
+  return FindIdenticalSignalMax(*v_trace, *t_trace);
 }
 
 //==============================================================================
@@ -119,6 +136,17 @@ WavePoints FindMultipleSignalMax(
   return _FindMultipleSignalMax(
     v_trace, t_trace, 0, v_trace.size(), threshold, scale);
 }
+
+//==============================================================================
+WavePoints FindMultipleSignalMax(
+  const TraceD * const v_trace,
+  const TraceD * const t_trace,
+  const double &threshold,
+  const double &scale /* = 2.0 */)
+{
+  return FindMultipleSignalMax(*v_trace, *t_trace, threshold, scale);
+}
+
 
 //==============================================================================
 WavePoints _FindMultipleSignalMaxAlt1(

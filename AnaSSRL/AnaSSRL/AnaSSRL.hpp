@@ -21,23 +21,38 @@ private:
     const double &bucket_start,
     const double &bucket_step);
 
+  void prepare_fix_window_branches(BetaConfigMgr* const configMgr);
+  void fill_fix_window_branches(
+    int ch,
+    const std::vector<double> &v_trace,
+    const std::vector<double> &t_trace,
+    double t_min,
+    double t_max);
+
 private:
-  const int ch_start_ = 1;
-  static const int num_ch_ = 4;
+  const int ch_start_ = 0;
+  static const int num_ch_ = 16;
   std::vector<int> active_ch_ = {};
-  bool store_waveform = false;
+  bool store_waveform = true;
   bool use_single_t_trace = true;
+  bool use_single_input_t_trace = true;
   bool found_single_t_trace = false;
 
-  const double fixed_win_min = -0.5e-9;
-  const double fixed_win_max = 2.5e-9;
+  double bucket_t_start_ = -44e-9;
+  double bucket_t_end_ = 2.08e-9;
+  int nbuckets_= 28;
 
-  const int nbuckets_= 28;
+  bool fill_fix_window = true;
+  double fix_win_start_ = 560.0;
+  double fix_win_step_size_ = 11;
+  int fix_win_nstep_ = 40;
 
   // ===========================================================================
   // input variables
   std::vector<double> *w[num_ch_];
   std::vector<double> *t[num_ch_];
+
+  std::vector<double> *trig;
 
   // ===========================================================================
   // output variables
@@ -69,6 +84,13 @@ private:
   std::vector<float> *output_w[num_ch_];
   std::vector<float> *output_corr_w[num_ch_];
   std::vector<float> *output_t[num_ch_];
+
+  std::vector<float> *output_fix_pmax[num_ch_];
+  std::vector<float> *output_fix_tmax[num_ch_];
+  std::vector<float> *output_fix_area[num_ch_];
+
+  double *trig_time;
+
 };
 
 #endif

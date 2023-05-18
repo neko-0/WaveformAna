@@ -60,8 +60,23 @@ namespace waveform_methods::Baseline
 
   bool MultiSignalBaselineCorrection(
     WavePoints &signals,
+    TraceD * const v_trace,
+    const double &frac_npts,
+    const int &npts_forward,
+    const int &npts_backward);
+
+  bool MultiSignalBaselineCorrection(
+    WavePoints &signals,
     TraceD &v_trace,
     const TraceD &t_trace,
+    const double &frac_npts,
+    const double &forward_time,
+    const double &backward_time);
+
+  bool MultiSignalBaselineCorrection(
+    WavePoints &signals,
+    TraceD * const v_trace,
+    const TraceD * const t_trace,
     const double &frac_npts,
     const double &forward_time,
     const double &backward_time);
