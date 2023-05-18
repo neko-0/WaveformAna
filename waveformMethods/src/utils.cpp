@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdio.h>
 
 namespace waveform_methods::Utils {
 
@@ -24,12 +25,29 @@ std::vector<dtype> MedianFilter(
   int half_rw = window_size - half_lw;
   std::vector<dtype> output(size);
 
-  // storing the left boundary as unchanged from data
-  for(int i=0; i<half_lw; i++){
-    output[i] = data[i];
+  std::vector<dtype> lbound(half_lw + window_size);
+  std::vector<dtype> rbound(half_rw + window_size);
+
+  // extending left boundaries by mirroring.
+  for(std::size_t i = 0; i < half_lw + window_size; i++){
+    std::size_t j;
+    if(i < half_lw){
+      j = half_lw - i;
+    } else {
+      j = i - half_lw;
+    }
+    lbound[i] = data[j];
+  }
+  for(std::size_t i = 0; i < half_lw; i++){
+    auto start = lbound.begin() + i;
+    auto end = start + window_size;
+    std::vector<dtype> temp(start, end);
+    std::nth_element(temp.begin(), temp.begin() + half_lw, temp.end());
+    output[i] = temp[half_lw];
   }
 
-  for(int i=half_lw; i < size-half_rw; i++){
+  // central region
+  for(std::size_t i=half_lw; i < size-half_rw; i++){
     auto start = data.begin()+i-half_lw;
     auto end = start + window_size;
     std::vector<dtype> temp(start, end);
@@ -37,13 +55,31 @@ std::vector<dtype> MedianFilter(
     output[i] = temp[half_lw];
   }
 
-  // right boundary
-  for(int i=size-1; i>size-half_rw; i--){
-    output[i] = data[i];
+  // extending right boundary by mirroring
+  for(std::size_t i = 0; i < half_rw + window_size; i++){
+    std::size_t j;
+    if(i < window_size){
+      j = i + size - window_size - 1;
+    } else {
+      j = size - (i - window_size) - 1;
+    }
+    rbound[i] = data[j];
   }
+  for(std::size_t i = 0; i < half_rw; i++){
+    auto start = rbound.begin() + i;
+    auto end = start + window_size;
+    std::vector<dtype> temp(start, end);
+    std::nth_element(temp.begin(), temp.begin() + half_lw, temp.end());
+    output[i + size - half_rw] = temp[half_lw];
+  }
+
+  // for(auto x : output) std::cout << x << "\n";
+  // for(auto x : lbound) std::cout << x << "\n";
+  // getchar();
 
   return output;
 }
+
 template std::vector<int> MedianFilter<int>(const std::vector<int>&, const int&);
 template std::vector<float> MedianFilter<float>(const std::vector<float>&, const int&);
 template std::vector<double> MedianFilter<double>(const std::vector<double>&, const int&);
@@ -59,11 +95,12 @@ std::vector<double> GaussianKernel(
   gaus.reserve(window_size);
   double sum = 0.0;
   double sig_sq = -0.5 / (sigma*sigma);
-  for(int i = -half_win; i < half_win; i++){
-    double value = height*exp(sig_sq*(i-mean)*(i-mean));
+  for(int i = -half_win; i <= half_win; i++){
+    double dx = i-mean;
+    double value = height*exp(sig_sq*dx*dx);
     gaus.emplace_back(value);
     sum += value;
-}
+  }
   for(auto &x : gaus){x /= sum;}
 
   return gaus;
