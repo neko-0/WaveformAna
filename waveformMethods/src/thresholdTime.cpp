@@ -11,14 +11,14 @@ std::vector<double> FindTimeAtThreshold(
   const double &threshold)
 {
   std::vector<double> threshold_time = {};
-  for(int i = start; i < end; i++){
-    double v_value = v_trace.at(i);
-    if(v_value >= threshold && v_trace.at(i-1) < threshold){
-      t_value = Utils::LinearInterpolationX(
-        t_trace.at(i-1), v_trace.at(i-1),
-        t_trace.at(i), v_trace.at(i), threshold);
-      threhosld_time.push_back(t_value);
-    }
+
+  for(std::size_t i = start > 0 ? start : 1; i < end; i++){
+    if(v_trace.at(i) < threshold) continue;
+    if(v_trace.at(i-1) >= threshold) continue;
+    double t_value = Utils::LinearInterpolationX(
+      t_trace.at(i-1), v_trace.at(i-1),
+      t_trace.at(i), v_trace.at(i), threshold);
+    threshold_time.push_back(t_value);
   }
 
   return threshold_time;
@@ -30,7 +30,7 @@ std::vector<double> FindTimeAtThreshold(
   const TraceD &t_trace,
   const double &threshold)
 {
-  return FindTimeAtThreshold(v_trace, t_trace, 0, v_trace.size(), threshold);
+  return FindTimeAtThreshold(v_trace, t_trace, 1, v_trace.size(), threshold);
 }
 
 //==============================================================================
