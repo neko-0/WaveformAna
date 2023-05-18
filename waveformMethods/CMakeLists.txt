@@ -12,6 +12,7 @@ add_library(WaveformMethods SHARED
   src/mix.cpp
   src/noise.cpp
   src/riseTime.cpp
+  src/thresholdTime.cpp
   src/utils.cpp
   src/waveArea.cpp
   src/waveMax.cpp

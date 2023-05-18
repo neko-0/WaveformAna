@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
 project(WaveformAna VERSION 1.0 DESCRIPTION "WaveformAna")
