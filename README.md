@@ -1,11 +1,13 @@
 # Installation
-`mkdir TestArea; cd TestArea`
 
-`git clone https://github.com/neko-0/WaveformAna.git`
-
-`cd WaveformAna; source setup.sh`
-
-`build`
+```bash
+mkdir TestArea
+cd TestArea
+git clone https://github.com/neko-0/WaveformAna.git
+cd WaveformAna
+source setup.sh # for next login, just source the same setup.sh
+build
+```
 
 NOTE: if you have problem compiling with the <std::filesystem>, try to update
 gcc/g++ to version 11.
@@ -25,46 +27,35 @@ New user analysis need to be registered in order to be used with `run_Ana`.
 First create a directory under `WaveformAna`, e.g `MyNewAna` with the following
 structure:
 
-```
+```.
 WaveformAna
-  CMakeLists.txt
-  -- MyNewAna
-      MyNewAna.hpp
-  -- src
-      MyNewAna.cpp
+ ├── CMakeLists.txt
+ ├── MyNewAna
+     ├── MyNewAna.hpp
+     ├── src
+         ├──MyNewAna.cpp
 ```
 
 The user analysis need to be derived from class `BaseAna`, so in `MyNewAna.hpp`:
 
-```
+```cpp
 #include "baseAna/baseAna.hpp"
 #include "configMgr/betaConfigMgr.hpp"
 
 struct MyNewAna : BaseAna {
   MyNewAna(){};
   ~MyNewAna(){};
-  virtual void initialize(BetaConfigMgr *configMgr);
-  virtual void execute(BetaConfigMgr *configMgr);
-  virtual void finalize(BetaConfigMgr *configMgr);
+  virtual void initialize(BetaConfigMgr *configMgr); // call only once for initialization purpose.
+  virtual void execute(BetaConfigMgr *configMgr); // call for every waveform event.
+  virtual void finalize(BetaConfigMgr *configMgr); // call only once for cleanup purpose.
 };
 ```
 
-and user needs to implement the following virtual member functions:
-  - `void initialize(BetaConfigMgr *configMgr)`
-
-    call only once for initialization purpose.
-
-  - `void execute(BetaConfigMgr *configMgr)`
-
-    call for every waveform event. Analysis on each event takes place within this method.
-
-  - `void finialize(BetaConfigMgr *configMgr)`
-
-    call only once for cleanup purpose.
+and user needs to implement the virtual member functions:
 
 The `CMakelist.txt` should have something similar to this:
 
-```
+```cmake
 cmake_minimum_required(VERSION 3.10)
 project(MyNewAna VERSION 1.0 DESCRIPTION "MyNewAna")
 add_library(MyNewAna SHARED src/MyNewAna.cpp)
@@ -75,7 +66,7 @@ target_link_libraries(MyNewAna PRIVATE ConfigMgr)
 
 To register the analysis, do the following in `analysisDriver/src/register.cpp`
 
-```
+```cpp
 #include "analysisDriver/register.hpp"
 
 // include analysis header
@@ -94,7 +85,7 @@ bool AnalysisRegister::Run(){
 and in the `analysisDriver/CMakeLists.txt`, add the packaged name that you have
 named in your analysis
 
-```
+```cmake
 # Need to include user analysis here as well.
 set(ANA_LIST AnaSSRL MyNewAna)
 ```
