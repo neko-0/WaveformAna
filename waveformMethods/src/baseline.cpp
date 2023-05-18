@@ -5,6 +5,7 @@
 #include <math.h>
 #include <numeric>
 #include <iostream>
+#include <stdio.h>
 #include <Eigen/SparseLU>
 #include <Eigen/SparseCholesky>
 // #include <Eigen/IterativeLinearSolvers>
@@ -80,6 +81,18 @@ bool MultiSignalBaselineCorrection(
 //==============================================================================
 bool MultiSignalBaselineCorrection(
   WavePoints &signals,
+  TraceD * const v_trace,
+  const double &frac_npts,
+  const int &npts_forward,
+  const int &npts_backward)
+{
+  return MultiSignalBaselineCorrection(
+    signals, *v_trace, frac_npts, npts_forward, npts_backward);
+}
+
+//==============================================================================
+bool MultiSignalBaselineCorrection(
+  WavePoints &signals,
   TraceD &v_trace,
   const TraceD &t_trace,
   const double &frac_npts,
@@ -91,6 +104,19 @@ bool MultiSignalBaselineCorrection(
   int npt_b = backward_time / dt;
   return MultiSignalBaselineCorrection(
     signals, v_trace, frac_npts, npt_f, npt_b);
+}
+
+//==============================================================================
+bool MultiSignalBaselineCorrection(
+  WavePoints &signals,
+  TraceD * const v_trace,
+  const TraceD * const t_trace,
+  const double &frac_npts,
+  const double &forward_time,
+  const double &backward_time)
+{
+  return MultiSignalBaselineCorrection(
+    signals, *v_trace, *t_trace, frac_npts, forward_time, backward_time);
 }
 
 //==============================================================================
@@ -355,35 +381,69 @@ TraceD NoiseMedian(
   int half_lw = window_size / 2;
   int half_rw = window_size - half_lw;
 
+  int lw_stop = half_lw;
+  int rw_stop = size-half_rw;
+
   std::vector<double> baseline(size);
 
-  // left boundary
-  for(int i=0; i<half_lw; i++){
-    baseline[i] = median[i];
+  std::vector<double> lbound(half_lw + window_size);
+  std::vector<double> rbound(half_rw + window_size);
+
+  // extending left boundaries by mirroring.
+  for(std::size_t i = 0; i < half_lw + window_size; i++){
+    std::size_t j;
+    if(i < half_lw){
+      j = half_lw - i;
+    } else {
+      j = i - half_lw;
+    }
+    lbound[i] = median[j];
+  }
+  for(std::size_t i = 0; i < half_lw; i++){
+    double sum = 0.0;
+    for(std::size_t j = 0; j<window_size; j++){
+      sum += lbound[i+j] * gaus[j];
+    }
+    baseline[i] = sum;
   }
 
-  // convoluting
-  for(int i=half_lw; i<size-half_rw; i++){
+  // convoluting central region
+  for(std::size_t i = half_lw; i < rw_stop; i++){
     double sum = 0.0;
     // for(int j=i-half_lw; j<i+half_rw; j++){
     //   // if((i-j)<0) continue;
     //   sum += median[j] * gaus[i-j];
     // }
-    int median_start = i-half_lw;
-    for(int j=0; j<window_size; j++){
+    std::size_t median_start = i-half_lw;
+    for(std::size_t j = 0; j < window_size; j++){
       // if((i-j)<0) continue;
       sum += median[median_start+j] * gaus[j];
     }
     baseline[i] = sum;
   }
 
-  // right boundary
-  for(int i=size-1; i>size-half_rw; i--){
-    baseline[i] = median[i];
+  // extending right boundaries by mirroring.
+  for(std::size_t i = 0; i < half_rw + window_size; i++){
+    std::size_t j;
+    if(i < window_size){
+      j = i + size - window_size - 1;
+    } else {
+      j = size - (i - window_size) - 1;
+    }
+    rbound[i] = median[j];
+  }
+  for(std::size_t i = 0; i < half_rw; i++){
+    double sum = 0.0;
+    for(std::size_t j = 0; j<window_size; j++){
+      sum += rbound[i+j] * gaus[j];
+    }
+    baseline[i + size - half_rw] = sum;
   }
 
+
+  // perform correction and return corrected waveform.
   if(do_correction){
-    for(int i = 0; i < size; i++){
+    for(std::size_t i = 0; i < size; i++){
       baseline[i] = v_trace[i] - baseline[i];
     }
   }
