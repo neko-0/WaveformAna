@@ -18,6 +18,9 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->store_waveform = general["store_waveform"].as<bool>();
   this->use_single_t_trace = general["use_single_t_trace"].as<bool>();
   this->use_single_input_t_trace = general["use_single_input_t_trace"].as<bool>();
+  this->baseline_opt = general["baseline_opt"].as<int>();
+  this->run_type = general["run_type"].as<int>();
+  this->do_max_ch_ = general["do_max_ch"].as<bool>();
   int num_ch = this->num_ch_;
   if(general["nchannels"].as<int>() > 0){
     num_ch = general["nchannels"].as<int>();
@@ -34,7 +37,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->fix_win_step_size_ = fix_win["fix_win_step_size"].as<double>();
   this->fix_win_nstep_ = fix_win["fix_win_nstep"].as<int>();
 
-  for(int i = 0; i < num_ch_; i++){
+  for(int i = 0; i < num_ch; i++){
     // input branches
     std::string current_ch = std::to_string(ch_start_ + i);
     w[i] = configMgr->SetInputBranch<std::vector<double>>("w" + current_ch);
@@ -100,9 +103,6 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
 
   if(fill_fix_window) prepare_fix_window_branches(configMgr);
 
-  // trig = configMgr->SetInputBranch<std::vector<double>>("trg0");
-  // trig_time = configMgr->SetOutputBranch<double>("trig_time");
-
   LOG_INFO("number of active chanenls: " + std::to_string(active_ch_.size()));
 }
 
@@ -118,22 +118,32 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
       continue;
     }
 
-    // auto corr_w = wm::Baseline::ARPLS_PLS(*w[ch], 1.0e13);
-    auto corr_w = wm::Baseline::NoiseMedian(*w[ch], w[ch]->size() / 12);
+    std::vector<double> corr_w;
+    if(this->baseline_opt == 1){
+      corr_w = wm::Baseline::ARPLS_PLS(*w[ch], 1.0e12);
+    } else {
+      corr_w = wm::Baseline::NoiseMedian(*w[ch], w[ch]->size() / 12);
+    }
 
     auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
     // auto range_rms = wm::CalcNoise(*w[ch], *t[ch], 480, 550);
     // mix_params.rms = range_rms;
 
-    // check polarity of the signal. determine threshold for pmax finder
-    double polarity = -1.0; // forcing signal inverstion
-    // if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) {
-    //   polarity = 1.0;
-    // } else {
-    //   polarity = -1.0;
-    // }
-    // double threshold = 5.0 * mix_params.rms;
-    double threshold = 5.0 * 6.0; // AC Digitizer Run
+    double polarity;
+    double threshold;
+    if(this->run_type == 0){
+      polarity = -1.0;
+      // threshold = 30.0; // 5.0 * 6.0 AC Digitizer Run
+      threshold = 5.0 * mix_params.rms;
+    } else {
+      // check polarity of the signal. determine threshold for pmax finder
+      if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) {
+        polarity = 1.0;
+      } else {
+        polarity = -1.0;
+      }
+      threshold = 5.0 * mix_params.rms;
+    }
 
     for(int i=0; i < w[ch]->size(); i++){
       w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
@@ -193,6 +203,19 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
     }
   }
 
+  if(do_max_ch_) {
+    std::vector<int> large_pad = {4, 5, 6, 7, 8, 9, 10, 11};
+    std::vector<int> small_pad = {0, 1, 2, 3, 12, 13, 14, 15};
+    std::vector<int> strip_set1 = {11, 4, 5};
+    std::vector<int> strip_set2 = {10, 5, 11};
+    std::vector<int> strip_set3 = {5, 4, 11, 10, 6};
+    find_max_ch(large_pad, *output_max_ch, *(this->output_sum_large), large_pad, 5);
+    find_max_ch(small_pad, *output_small_pad_max_ch, *(this->output_sum_small));
+    std::vector<int> tmp;
+    find_max_ch(large_pad, tmp, *(this->output_sum_strip_set1), strip_set1, 11);
+    find_max_ch(large_pad, tmp, *(this->output_sum_strip_set2), strip_set2, 5);
+    find_max_ch(large_pad, tmp, *(this->output_sum_strip_set3), strip_set3, 5);
+  }
 }
 
 void AnaSSRL::finalize(BetaConfigMgr* const configMgr){
@@ -267,11 +290,21 @@ void AnaSSRL::bucket_time_difference(
 // =============================================================================
 void AnaSSRL::prepare_fix_window_branches(BetaConfigMgr* const configMgr){
   for(auto &i : active_ch_){
-    std::string current_ch = std::to_string(i+1);
+    std::string current_ch = std::to_string(ch_start_ + i);
     output_fix_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("fix_pmax" + current_ch);
     output_fix_tmax[i] = configMgr->SetOutputBranch<std::vector<float>>("fix_tmax" + current_ch);
     output_fix_area[i] = configMgr->SetOutputBranch<std::vector<float>>("fix_area" + current_ch);
   }
+
+  if(!do_max_ch_) return;
+
+  output_max_ch = configMgr->SetOutputBranch<std::vector<int>>("max_ch");
+  output_small_pad_max_ch = configMgr->SetOutputBranch<std::vector<int>>("small_max_ch");
+  output_sum_large = configMgr->SetOutputBranch<std::vector<double>>("sum_large");
+  output_sum_small = configMgr->SetOutputBranch<std::vector<double>>("sum_small");
+  output_sum_strip_set1 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set1");
+  output_sum_strip_set2 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set2");
+  output_sum_strip_set3 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set3");
 }
 
 // =============================================================================
@@ -283,15 +316,77 @@ void AnaSSRL::fill_fix_window_branches(
   double t_max)
 {
   double threshold = 0.0;
+  double edge_dist = 2.0;
   auto s_max = wm::FindSignalMax(v_trace, t_trace, t_min, t_max);
-  if(s_max.v > threshold){
+  if(s_max.v < threshold
+    || abs(s_max.t - t_min) <= edge_dist
+    || abs(s_max.t - t_max) <= edge_dist) {
+      output_fix_pmax[ch]->push_back(0.0);
+      output_fix_tmax[ch]->push_back(-1.0);
+      output_fix_area[ch]->push_back(0.0);
+  }
+  else{
     output_fix_pmax[ch]->push_back(s_max.v);
     output_fix_tmax[ch]->push_back(s_max.t);
     output_fix_area[ch]->push_back(wm::CalcPulseArea(v_trace, t_trace, s_max.index));
   }
-  else{
-    output_fix_pmax[ch]->push_back(0.0);
-    output_fix_tmax[ch]->push_back(-1.0);
-    output_fix_area[ch]->push_back(0.0);
+}
+
+// =============================================================================
+void AnaSSRL::find_max_ch(
+  const std::vector<int> &chlist,
+  std::vector<int> &buffer,
+  std::vector<double> &output,
+  const std::vector<int> &sumCh,
+  int targetCh,
+  int targetCh2,
+  double scale)
+{
+  int npmax = output_fix_pmax[active_ch_.at(0)]->size();
+  for(std::size_t x = 0; x < npmax; x++){
+    double v_max = -1.0;
+    int ch_max = -1;
+    for(auto &i : chlist) {
+      if(output_fix_pmax[i]->at(x) > v_max){
+        v_max = output_fix_pmax[i]->at(x);
+        ch_max = i;
+      }
+    }
+    buffer.push_back(ch_max);
+    if( targetCh != -1 || targetCh2 != -1) {
+      if( (ch_max != targetCh) && (ch_max != targetCh2) ) {
+        output.push_back(-1.0);
+        continue;
+      }
+    }
+    if(ch_max != -1){
+      bool do_sum = true;
+      double summed = 0.0;
+      for(auto &i : sumCh) {
+        if(i == ch_max){
+          summed+=v_max;
+          continue;
+        }
+        if(output_fix_pmax[i]->at(x) > v_max*scale){
+          do_sum = false;
+          break;
+        }
+        if(abs(output_fix_tmax[ch_max]->at(x) - output_fix_tmax[i]->at(x)) > 3){
+          do_sum = false;
+          break;
+        }
+        summed += output_fix_pmax[i]->at(x);
+      }
+      if(do_sum) output.push_back(summed);
+      else output.push_back(-1.0);
+    }
   }
+}
+
+void AnaSSRL::find_max_ch(
+  const std::vector<int> &chlist,
+  std::vector<int> &buffer,
+  std::vector<double> &output)
+{
+  AnaSSRL::find_max_ch(chlist, buffer, output, chlist, -1, -1);
 }

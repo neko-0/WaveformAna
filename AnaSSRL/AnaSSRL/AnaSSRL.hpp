@@ -29,6 +29,20 @@ private:
     double t_min,
     double t_max);
 
+  void find_max_ch(
+    const std::vector<int> &chlist,
+    std::vector<int> &buffer,
+    std::vector<double> &output,
+    const std::vector<int> &sumCh,
+    int targetCh = -1,
+    int targetCh2 = -1,
+    double scale = 0.8);
+
+  void find_max_ch(
+    const std::vector<int> &chlist,
+    std::vector<int> &buffer,
+    std::vector<double> &output);
+
 private:
   const int ch_start_ = 0;
   static const int num_ch_ = 16;
@@ -46,6 +60,11 @@ private:
   double fix_win_start_ = 560.0;
   double fix_win_step_size_ = 11;
   int fix_win_nstep_ = 40;
+
+  bool do_max_ch_ = false;
+
+  int baseline_opt = 0;
+  int run_type = 0;
 
   // ===========================================================================
   // input variables
@@ -80,6 +99,15 @@ private:
   std::vector<float> *output_bucket_cfd20_diff[num_ch_];
   std::vector<float> *output_bucket_cfd50_diff[num_ch_];
   float *output_bucket_corr[num_ch_];
+
+  std::vector<int> *output_max_ch;
+  std::vector<int> *output_small_pad_max_ch;
+
+  std::vector<double> *output_sum_large;
+  std::vector<double> *output_sum_small;
+  std::vector<double> *output_sum_strip_set1; // [12, 5, 6]
+  std::vector<double> *output_sum_strip_set2; // [11, 7, 7]
+  std::vector<double> *output_sum_strip_set3; // [11, 7, 7]
 
   std::vector<float> *output_w[num_ch_];
   std::vector<float> *output_corr_w[num_ch_];
