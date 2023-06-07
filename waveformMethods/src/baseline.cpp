@@ -333,7 +333,7 @@ TraceD ARPLS_PLS(
       var += (v_d.coeff(x) - mean) * (v_d.coeff(x) - mean);
     }
     double std = sqrt(var/(count-1));
-    double mean_sig = (-mean+2.0*std);
+    double mean_sig = 2.0*std - mean;
     double std_inv = 2.0/std;
     Eigen::VectorXd v_w_new(size);
     // #pragma omp parallel for simd schedule(static, 512)
