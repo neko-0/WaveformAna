@@ -31,7 +31,7 @@ public:
   virtual void AddExternalConfig(const std::string &name);
   virtual void Initialize(const std::string &fname);
   virtual void EventLoop();
-  virtual void DoAnalysis();
+  virtual bool DoAnalysis();
   virtual void Finalize();
   virtual void ReportSatus();
 };

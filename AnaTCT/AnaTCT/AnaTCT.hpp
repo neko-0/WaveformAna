@@ -12,8 +12,8 @@ struct AnaTCT : BaseAna {
   ~AnaTCT(){};
 
   virtual void initialize(BetaConfigMgr* const configMgr);
-  virtual void execute(BetaConfigMgr* const configMgr);
   virtual void finalize(BetaConfigMgr* const configMgr);
+  virtual bool execute(BetaConfigMgr* const configMgr);
 
 private:
   const int ch_start_ = 0;

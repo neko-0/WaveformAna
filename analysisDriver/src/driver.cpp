@@ -91,16 +91,17 @@ void AnalysisDriver::EventLoop(){
         (counter_ == this->configMgr->GetInputEntries()-1) ) {
           ReportSatus();
     }
-    DoAnalysis();
-    this->configMgr->Fill();
+    if(DoAnalysis()){
+      this->configMgr->Fill();
+    }
     counter_++;
   }
   LOG_INFO("EventLoop finished.");
 }
 
 //==============================================================================
-void AnalysisDriver::DoAnalysis(){
-  user_ana->execute(configMgr);
+bool AnalysisDriver::DoAnalysis(){
+  return this->user_ana->execute(configMgr);
 }
 
 //==============================================================================
