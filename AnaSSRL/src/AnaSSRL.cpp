@@ -209,7 +209,8 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
     std::vector<int> strip_set1 = {11, 4, 5};
     std::vector<int> strip_set2 = {10, 5, 11};
     std::vector<int> strip_set3 = {5, 4, 11, 10, 6};
-    find_max_ch(large_pad, *output_max_ch, *(this->output_sum_large), large_pad, 5);
+    find_max_ch(large_pad, *output_max_ch, *(this->output_sum_large), large_pad);
+    find_max_ch(large_pad, *output_2nd_max_ch, *(this->output_sum_large), large_pad, -1, -1, 0.8, 11);
     find_max_ch(small_pad, *output_small_pad_max_ch, *(this->output_sum_small));
     std::vector<int> tmp;
     find_max_ch(large_pad, tmp, *(this->output_sum_strip_set1), strip_set1, 11);
@@ -299,6 +300,7 @@ void AnaSSRL::prepare_fix_window_branches(BetaConfigMgr* const configMgr){
   if(!do_max_ch_) return;
 
   output_max_ch = configMgr->SetOutputBranch<std::vector<int>>("max_ch");
+  output_2nd_max_ch = configMgr->SetOutputBranch<std::vector<int>>("max2_ch");
   output_small_pad_max_ch = configMgr->SetOutputBranch<std::vector<int>>("small_max_ch");
   output_sum_large = configMgr->SetOutputBranch<std::vector<double>>("sum_large");
   output_sum_small = configMgr->SetOutputBranch<std::vector<double>>("sum_small");
@@ -340,13 +342,15 @@ void AnaSSRL::find_max_ch(
   const std::vector<int> &sumCh,
   int targetCh,
   int targetCh2,
-  double scale)
+  double scale,
+  int max_1st)
 {
   int npmax = output_fix_pmax[active_ch_.at(0)]->size();
   for(std::size_t x = 0; x < npmax; x++){
     double v_max = -1.0;
     int ch_max = -1;
     for(auto &i : chlist) {
+      if(i == max_1st) continue;
       if(output_fix_pmax[i]->at(x) > v_max){
         v_max = output_fix_pmax[i]->at(x);
         ch_max = i;

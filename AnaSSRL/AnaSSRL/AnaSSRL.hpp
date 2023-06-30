@@ -36,7 +36,8 @@ private:
     const std::vector<int> &sumCh,
     int targetCh = -1,
     int targetCh2 = -1,
-    double scale = 0.8);
+    double scale = 0.8,
+    int max_1st = -1);
 
   void find_max_ch(
     const std::vector<int> &chlist,
@@ -101,6 +102,7 @@ private:
   float *output_bucket_corr[num_ch_];
 
   std::vector<int> *output_max_ch;
+  std::vector<int> *output_2nd_max_ch;
   std::vector<int> *output_small_pad_max_ch;
 
   std::vector<double> *output_sum_large;
