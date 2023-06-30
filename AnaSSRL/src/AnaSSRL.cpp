@@ -9,6 +9,8 @@
 
 namespace wm = waveform_methods;
 
+void AnaSSRL::setup(BetaConfigMgr* const configMgr) { }
+
 void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
 
   LOG_INFO("external config: " + configMgr->ext_config_name());

@@ -9,7 +9,7 @@
 bool AnalysisRegister::Run(){
   auto _ssrl_reg = AnalysisRegister::Register<AnaSSRL>("SSRL");
   auto _tct_reg = AnalysisRegister::Register<AnaTCT>("TCT");
-  auto _g4_reg = AnalysisRegister::Register<AnaTCT>("G4");
+  auto _g4_reg = AnalysisRegister::Register<AnaG4>("G4");
 
   return true;
 }

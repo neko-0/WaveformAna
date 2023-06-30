@@ -76,6 +76,7 @@ void AnalysisDriver::AddExternalConfig(const std::string &name){
 void AnalysisDriver::Initialize(const std::string &fname){
   LOG_INFO("Start initialization with file: " + fname);
   this->configMgr->input_filename(fname);
+  this->user_ana->setup(this->configMgr);
   this->configMgr->Initialize();
   this->user_ana->initialize(this->configMgr);
   LOG_INFO("Initialization finisehd.");

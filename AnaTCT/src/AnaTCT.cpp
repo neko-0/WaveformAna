@@ -7,6 +7,8 @@
 
 namespace wm = waveform_methods;
 
+void AnaTCT::setup(BetaConfigMgr* const configMgr) { }
+
 void AnaTCT::initialize(BetaConfigMgr* const configMgr){
 
   t = configMgr->SetInputBranch<std::vector<double>>("t0");

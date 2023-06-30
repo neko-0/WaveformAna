@@ -11,6 +11,7 @@ struct AnaSSRL : BaseAna {
   AnaSSRL(){};
   ~AnaSSRL(){};
 
+  virtual void setup(BetaConfigMgr* const configMgr);
   virtual void initialize(BetaConfigMgr* const configMgr);
   virtual void finalize(BetaConfigMgr* const configMgr);
   virtual bool execute(BetaConfigMgr* const configMgr);
