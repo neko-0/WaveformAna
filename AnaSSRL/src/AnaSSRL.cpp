@@ -23,10 +23,14 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->baseline_opt = general["baseline_opt"].as<int>();
   this->run_type = general["run_type"].as<int>();
   this->do_max_ch_ = general["do_max_ch"].as<bool>();
+  this->threshold = general["threshold"].as<double>();
   int num_ch = this->num_ch_;
   if(general["nchannels"].as<int>() > 0){
     num_ch = general["nchannels"].as<int>();
   }
+  this->invert_ch = general["invert_ch"].as<std::vector<int>>();
+  this->trigger_ch = general["trigger_ch"].as<int>();
+  this->simple_ana_ch = general["simple_ana_ch"].as<std::vector<int>>();
 
   const auto &buckets = yaml_config["buckets"];
   this->bucket_t_start_ = buckets["bucket_t_start"].as<double>();
@@ -38,6 +42,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->fix_win_start_ = fix_win["fix_win_start"].as<double>();
   this->fix_win_step_size_ = fix_win["fix_win_step_size"].as<double>();
   this->fix_win_nstep_ = fix_win["fix_win_nstep"].as<int>();
+  this->fix_win_edge_dist_ = fix_win["fix_win_edge_dist"].as<double>();
 
   for(int i = 0; i < num_ch; i++){
     // input branches
@@ -87,6 +92,8 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     output_bucket_cfd20_diff[i]->reserve(nbuckets_);
     output_bucket_cfd50_diff[i]->reserve(nbuckets_);
 
+    thresholdTime[i] = configMgr->SetOutputBranch<double>("thresholdTime" + current_ch);
+
     if(store_waveform){
       output_w[i] = configMgr->SetOutputBranch<std::vector<float>>("w" + current_ch);
       output_corr_w[i] = configMgr->SetOutputBranch<std::vector<float>>("w_corr" + current_ch);
@@ -108,6 +115,158 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   LOG_INFO("number of active chanenls: " + std::to_string(active_ch_.size()));
 }
 
+//==============================================================================
+void AnaSSRL::trigger_routine(std::vector<double> &corr_w, int ch){
+
+  double polarity = 1.0;
+  // check user specified invertion
+  if(std::find(this->invert_ch.begin(), this->invert_ch.end(), ch) != this->invert_ch.end() ) {
+    polarity = -1.0;
+  }
+
+  auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
+
+  corr_w.reserve(w[ch]->size());
+  for(int i=0; i < w[ch]->size(); i++){
+      corr_w.push_back((w[ch]->at(i) - mix_params.baseline) * polarity);
+  }
+
+  if(fill_fix_window){
+    for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
+      auto _begin = *t[ch]->begin();
+      auto _end = *(t[ch]->end()-2);
+      fill_fix_window_branches(ch, corr_w, *t[ch], _begin, _end, true);
+    }
+  }
+}
+
+//==============================================================================
+void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
+  double polarity = 1.0;
+  double threshold;
+  // check user specified invertion
+  if(std::find(this->invert_ch.begin(), this->invert_ch.end(), ch) != this->invert_ch.end() ) {
+    polarity = -1.0;
+  }
+
+  if(this->baseline_opt == 1) {
+    std::vector<double> inv_w;
+    inv_w.reserve(w[ch]->size());
+    for(int i=0; i < w[ch]->size(); i++){
+      inv_w.emplace_back(w[ch]->at(i) * -1.0); // need to handle positive signal
+    }
+    corr_w = wm::Baseline::ARPLS_PLS(inv_w, 1.0e5);
+  } else {
+    corr_w = wm::Baseline::NoiseMedian(*w[ch], w[ch]->size() / 12);
+  }
+
+  auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
+  // auto range_rms = wm::CalcNoise(*w[ch], *t[ch], 480, 550);
+  // mix_params.rms = range_rms;
+
+  if(this->run_type == 0){
+    polarity = -1.0;
+    // threshold = 30.0; // 5.0 * 6.0 AC Digitizer Run
+    threshold = 5.0 * mix_params.rms;
+  } else if (this->run_type == 1) {
+    polarity = 1.0;
+    threshold = 5.0 * mix_params.rms;
+  } else {
+    // check polarity of the signal. determine threshold for pmax finder
+    if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) {
+      polarity = 1.0;
+    } else {
+      polarity = -1.0;
+    }
+    threshold = 5.0 * mix_params.rms;
+  }
+
+  if(this->threshold > 0.0) threshold = this->threshold;
+
+  for(int i=0; i < w[ch]->size(); i++){
+    w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
+    corr_w.at(i) *= polarity;
+  }
+
+  auto n_wave_pts = wm::FindMultipleSignalMax(corr_w, *t[ch], threshold);
+  auto n_raw_wave_pts = wm::FindMultipleSignalMax(w[ch], t[ch], threshold);
+
+  *output_basecorr[ch] = wm::Baseline::MultiSignalBaselineCorrection(
+    n_raw_wave_pts, w[ch], t[ch], 0.5, 5e-9, 5e-9
+  );
+
+  // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
+  // #pragma omp parallel for
+  // for(int pt_i=0; pt_i < n_wave_pts.size(); pt_i++){
+  //   auto pt = n_wave_pts.at(pt_i);
+  for(auto &pt : n_wave_pts){
+    if(pt.index < 0) continue;
+    if(!output_tmax[ch]->empty()){
+      output_tmax_diff[ch]->push_back(pt.t - output_tmax[ch]->back());
+    } else {
+      output_tmax_diff[ch]->push_back(0.0);
+    }
+    output_pmax[ch]->push_back(pt.v);
+    output_tmax[ch]->push_back(pt.t);
+    output_rise[ch]->push_back(wm::CalcRiseTime(corr_w, *t[ch], pt.index));
+    output_area[ch]->push_back(wm::CalcPulseArea(corr_w, *t[ch], pt.index));
+    auto cfd = wm::CalcCFDTime(corr_w, *t[ch], pt.index, 0.2, 0.5, 0.3);
+    output_20cfd[ch]->push_back(cfd.at(0));
+    output_50cfd[ch]->push_back(cfd.at(1));
+    output_fwhm[ch]->push_back(wm::CalcFWHM(corr_w, *t[ch], pt.index));
+  }
+  *output_nsignal[ch] = output_pmax[ch]->size();
+  *output_rms[ch] = mix_params.rms;
+
+  if(*output_nsignal[ch] == 0){
+    output_tmax_diff[ch]->push_back(0.0);
+    output_pmax[ch]->push_back(0.0);
+    output_tmax[ch]->push_back(0.0);
+    output_rise[ch]->push_back(0.0);
+    output_area[ch]->push_back(0.0);
+    output_20cfd[ch]->push_back(0.0);
+    output_50cfd[ch]->push_back(0.0);
+    output_fwhm[ch]->push_back(0.0);
+  }
+
+  for(auto &pt : n_raw_wave_pts){
+    if(pt.index < 0) continue;
+    output_raw_pmax[ch]->push_back(pt.v);
+  }
+
+  bucket_time_difference(ch, bucket_t_start_, bucket_t_end_); // 0.5, 1.0 for Digitizer run
+
+  if(fill_fix_window){
+    for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
+      auto _begin = fix_win_start_ + _step * fix_win_step_size_;
+      auto _end = _begin + fix_win_step_size_;
+      fill_fix_window_branches(ch, corr_w, *t[ch], _begin, _end);
+    }
+  }
+}
+
+//==============================================================================
+void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
+  double polarity = 1.0;
+  // check user specified invertion
+  if(std::find(this->invert_ch.begin(), this->invert_ch.end(), ch) != this->invert_ch.end() ) {
+    polarity = -1.0;
+  }
+  corr_w.reserve(w[ch]->size());
+  for(int i=0; i < w[ch]->size(); i++){
+      corr_w.push_back(w[ch]->at(i) * polarity);
+  }
+
+  if(fill_fix_window){
+    for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
+      auto _begin = *t[ch]->begin();
+      auto _end = *(t[ch]->end()-2);
+      fill_fix_window_branches(ch, corr_w, *t[ch], _begin, _end, true);
+    }
+  }
+}
+
+//==============================================================================
 bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
@@ -121,80 +280,20 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
     }
 
     std::vector<double> corr_w;
-    if(this->baseline_opt == 1){
-      corr_w = wm::Baseline::ARPLS_PLS(*w[ch], 1.0e12);
+
+    if(std::find(this->simple_ana_ch.begin(), this->simple_ana_ch.end(), ch) != this->simple_ana_ch.end() ) {
+      simple_routine(corr_w, ch);
+    } else if(this->trigger_ch == ch){
+      trigger_routine(corr_w, ch);
     } else {
-      corr_w = wm::Baseline::NoiseMedian(*w[ch], w[ch]->size() / 12);
+      regular_routine(corr_w, ch);
     }
 
-    auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
-    // auto range_rms = wm::CalcNoise(*w[ch], *t[ch], 480, 550);
-    // mix_params.rms = range_rms;
-
-    double polarity;
-    double threshold;
-    if(this->run_type == 0){
-      polarity = -1.0;
-      // threshold = 30.0; // 5.0 * 6.0 AC Digitizer Run
-      threshold = 5.0 * mix_params.rms;
+    auto th_time = wm::FindTimeAtThreshold(corr_w, *t[ch], 0.5);
+    if(th_time.size() != 0){
+      *thresholdTime[ch] = th_time.at(0);
     } else {
-      // check polarity of the signal. determine threshold for pmax finder
-      if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) {
-        polarity = 1.0;
-      } else {
-        polarity = -1.0;
-      }
-      threshold = 5.0 * mix_params.rms;
-    }
-
-    for(int i=0; i < w[ch]->size(); i++){
-      w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
-      corr_w.at(i) *= polarity;
-    }
-
-    auto n_wave_pts = wm::FindMultipleSignalMax(corr_w, *t[ch], threshold);
-    auto n_raw_wave_pts = wm::FindMultipleSignalMax(w[ch], t[ch], threshold);
-
-    *output_basecorr[ch] = wm::Baseline::MultiSignalBaselineCorrection(
-      n_raw_wave_pts, w[ch], t[ch], 0.5, 5e-9, 5e-9
-    );
-
-    // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
-    // #pragma omp parallel for
-    // for(int pt_i=0; pt_i < n_wave_pts.size(); pt_i++){
-    //   auto pt = n_wave_pts.at(pt_i);
-    for(auto &pt : n_wave_pts){
-      if(pt.index < 0) continue;
-      if(!output_tmax[ch]->empty()){
-        output_tmax_diff[ch]->push_back(pt.t - output_tmax[ch]->back());
-      } else {
-        output_tmax_diff[ch]->push_back(0.0);
-      }
-      output_pmax[ch]->push_back(pt.v);
-      output_tmax[ch]->push_back(pt.t);
-      output_rise[ch]->push_back(wm::CalcRiseTime(corr_w, *t[ch], pt.index));
-      output_area[ch]->push_back(wm::CalcPulseArea(corr_w, *t[ch], pt.index));
-      auto cfd = wm::CalcCFDTime(corr_w, *t[ch], pt.index, 0.2, 0.5, 0.3);
-      output_20cfd[ch]->push_back(cfd.at(0));
-      output_50cfd[ch]->push_back(cfd.at(1));
-      output_fwhm[ch]->push_back(wm::CalcFWHM(corr_w, *t[ch], pt.index));
-    }
-    *output_nsignal[ch] = output_pmax[ch]->size();
-    *output_rms[ch] = mix_params.rms;
-
-    for(auto &pt : n_raw_wave_pts){
-      if(pt.index < 0) continue;
-      output_raw_pmax[ch]->push_back(pt.v);
-    }
-
-    bucket_time_difference(ch, bucket_t_start_, bucket_t_end_); // 0.5, 1.0 for Digitizer run
-
-    if(fill_fix_window){
-      for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
-        auto _begin = fix_win_start_ + _step * fix_win_step_size_;
-        auto _end = _begin + fix_win_step_size_;
-        fill_fix_window_branches(ch, corr_w, *t[ch], _begin, _end);
-      }
+      *thresholdTime[ch] = -999;
     }
 
     if(store_waveform){
@@ -319,14 +418,20 @@ void AnaSSRL::fill_fix_window_branches(
   const std::vector<double> &v_trace,
   const std::vector<double> &t_trace,
   double t_min,
-  double t_max)
+  double t_max,
+  bool fill_previous)
 {
+  if(output_fix_pmax[ch]->size()!=0 &&fill_previous){
+      output_fix_pmax[ch]->push_back(output_fix_pmax[ch]->back());
+      output_fix_tmax[ch]->push_back(output_fix_tmax[ch]->back());
+      output_fix_area[ch]->push_back(output_fix_area[ch]->back());
+  }
+
   double threshold = 0.0;
-  double edge_dist = 2.0;
   auto s_max = wm::FindSignalMax(v_trace, t_trace, t_min, t_max);
   if(s_max.v < threshold
-    || abs(s_max.t - t_min) <= edge_dist
-    || abs(s_max.t - t_max) <= edge_dist) {
+    || abs(s_max.t - t_min) <= this->fix_win_edge_dist_
+    || abs(s_max.t - t_max) <= this->fix_win_edge_dist_) {
       output_fix_pmax[ch]->push_back(0.0);
       output_fix_tmax[ch]->push_back(-1.0);
       output_fix_area[ch]->push_back(0.0);

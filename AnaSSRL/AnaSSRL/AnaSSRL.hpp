@@ -28,7 +28,8 @@ private:
     const std::vector<double> &v_trace,
     const std::vector<double> &t_trace,
     double t_min,
-    double t_max);
+    double t_max,
+    bool fill_previous=false);
 
   void find_max_ch(
     const std::vector<int> &chlist,
@@ -45,6 +46,10 @@ private:
     std::vector<int> &buffer,
     std::vector<double> &output);
 
+  void regular_routine(std::vector<double> &corr_w, int ch);
+  void simple_routine(std::vector<double> &corr_w, int ch);
+  void trigger_routine(std::vector<double> &corr_w, int ch);
+
 private:
   const int ch_start_ = 0;
   static const int num_ch_ = 16;
@@ -54,6 +59,10 @@ private:
   bool use_single_input_t_trace = true;
   bool found_single_t_trace = false;
 
+  bool skip_it = false;
+
+  double threshold = 0.0;
+
   double bucket_t_start_ = -44e-9;
   double bucket_t_end_ = 2.08e-9;
   int nbuckets_= 28;
@@ -62,11 +71,18 @@ private:
   double fix_win_start_ = 560.0;
   double fix_win_step_size_ = 11;
   int fix_win_nstep_ = 40;
+  double fix_win_edge_dist_ = 0.0;
 
   bool do_max_ch_ = false;
 
   int baseline_opt = 0;
   int run_type = 0;
+
+  std::vector<int> invert_ch;
+  std::vector<int> simple_ana_ch;
+
+
+  int trigger_ch = -1;
 
   // ===========================================================================
   // input variables
@@ -119,6 +135,8 @@ private:
   std::vector<float> *output_fix_pmax[num_ch_];
   std::vector<float> *output_fix_tmax[num_ch_];
   std::vector<float> *output_fix_area[num_ch_];
+
+  double *thresholdTime[num_ch_];
 
   double *trig_time;
 
