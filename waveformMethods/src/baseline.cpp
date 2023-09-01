@@ -306,7 +306,7 @@ TraceD ARPLS_PLS(
   // measured and smoothed vectors
   Eigen::VectorXd v_y = Eigen::Map<Eigen::VectorXd>(v_trace.data(),size);
   Eigen::VectorXd v_z;
-  for(int i = 0; i < max_iter; i++){
+  for(int i = 0; i < max_iter+1; i++){
     // std::cout << "Iteration " << i << "\n";
     auto m_W = Eigen::SparseMatrix<double>(v_w.asDiagonal());
     // std::cout << "before eval \n";
@@ -314,19 +314,20 @@ TraceD ARPLS_PLS(
     auto v_b = (m_W * v_y).eval();
     // std::cout << "after eval \n";
     // std::cout << "before PLS \n";
+    // solving for z from (W+H)z = Wy --> z = ((W+H)^-1)*W*y
     v_z = PLS_PTRANS_I(m_A, v_b);
     // std::cout << "after PLS \n";
-    if(i == max_iter-1) break;
+    // if(i == max_iter-1) break;
     Eigen::VectorXd v_d = v_y - v_z;
     double mean = 0.0;
-    int count = 0;
     std::vector<int> d_minus_i;
     for(int x = 0; x < size; x++){
       if(v_d.coeff(x) >= 0) continue;
       mean += v_d.coeff(x);
-      d_minus_i.push_back(count);
-      count++;
+      d_minus_i.push_back(x);
     }
+    int count = d_minus_i.size();
+    if(count <= 1) count = 2;
     mean /= (count-1);
     double var = 0.0;
     for(auto &x : d_minus_i){
@@ -341,15 +342,14 @@ TraceD ARPLS_PLS(
       v_w_new.coeffRef(x) = 1.0 / (1.0 + exp(std_inv*(v_d.coeff(x)-mean_sig)));
     }
     // checking weight tolerance
-    bool early_exit = true;
-    for(int x = 0; x < size; x++){
-      if(abs(v_w_new.coeffRef(x)-v_w.coeffRef(x))/v_w.coeffRef(x) > tol){
-        break;
-        early_exit = false;
-      }
+    auto diff_w_norm = (v_w - v_w_new).norm();
+    auto old_w_norm = v_w.norm();
+    // std::cout << diff_w_norm / old_w_norm << std::endl;
+    if(diff_w_norm / old_w_norm < tol){
+      // std::cout << diff_w_norm << ", " << old_w_norm << ", " << "early termination\n";
+      break;
     }
     v_w = v_w_new;
-    if(early_exit) break;
   }
 
   std::vector<double> output(v_z.data(), v_z.data()+v_z.size());

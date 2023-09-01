@@ -76,6 +76,7 @@ void AnalysisDriver::AddExternalConfig(const std::string &name){
 void AnalysisDriver::Initialize(const std::string &fname){
   LOG_INFO("Start initialization with file: " + fname);
   this->configMgr->input_filename(fname);
+  this->user_ana->setup(this->configMgr);
   this->configMgr->Initialize();
   this->user_ana->initialize(this->configMgr);
   LOG_INFO("Initialization finisehd.");
@@ -91,16 +92,17 @@ void AnalysisDriver::EventLoop(){
         (counter_ == this->configMgr->GetInputEntries()-1) ) {
           ReportSatus();
     }
-    DoAnalysis();
-    this->configMgr->Fill();
+    if(DoAnalysis()){
+      this->configMgr->Fill();
+    }
     counter_++;
   }
   LOG_INFO("EventLoop finished.");
 }
 
 //==============================================================================
-void AnalysisDriver::DoAnalysis(){
-  user_ana->execute(configMgr);
+bool AnalysisDriver::DoAnalysis(){
+  return this->user_ana->execute(configMgr);
 }
 
 //==============================================================================

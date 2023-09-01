@@ -7,6 +7,8 @@
 
 namespace wm = waveform_methods;
 
+void AnaTCT::setup(BetaConfigMgr* const configMgr) { }
+
 void AnaTCT::initialize(BetaConfigMgr* const configMgr){
 
   t = configMgr->SetInputBranch<std::vector<double>>("t0");
@@ -38,7 +40,7 @@ void AnaTCT::initialize(BetaConfigMgr* const configMgr){
   }
 }
 
-void AnaTCT::execute(BetaConfigMgr* const configMgr){
+bool AnaTCT::execute(BetaConfigMgr* const configMgr){
 
   const double v_scale = 1.0; // V to mV
   const double t_scale = 1.0; // s to ps
@@ -78,6 +80,7 @@ void AnaTCT::execute(BetaConfigMgr* const configMgr){
     // std::move(cfd_times.begin(), cfd_times.end(), std::back_inserter(*output_cfd[ch]));
   }
 
+  return true;
 }
 
 void AnaTCT::finalize(BetaConfigMgr* const configMgr){

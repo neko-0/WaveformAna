@@ -19,6 +19,7 @@ bool BetaConfigMgr::Initialize()
     LOG_ERROR(input_filename_ + ": it's Zombie file");
     return false;
   }
+  LOG_INFO("Using input ttree: " + this->input_treename_ );
   this->input_tree = (TTree *)this->input_file->Get(input_treename_.c_str());
   this->input_entries_ = input_tree->GetEntries();
 

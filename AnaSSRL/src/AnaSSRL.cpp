@@ -9,6 +9,8 @@
 
 namespace wm = waveform_methods;
 
+void AnaSSRL::setup(BetaConfigMgr* const configMgr) { }
+
 void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
 
   LOG_INFO("external config: " + configMgr->ext_config_name());
@@ -106,7 +108,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   LOG_INFO("number of active chanenls: " + std::to_string(active_ch_.size()));
 }
 
-void AnaSSRL::execute(BetaConfigMgr* const configMgr){
+bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
   // else *trig_time = -1.0;
@@ -217,6 +219,8 @@ void AnaSSRL::execute(BetaConfigMgr* const configMgr){
     find_max_ch(large_pad, tmp, *(this->output_sum_strip_set2), strip_set2, 5);
     find_max_ch(large_pad, tmp, *(this->output_sum_strip_set3), strip_set3, 5);
   }
+
+  return true;
 }
 
 void AnaSSRL::finalize(BetaConfigMgr* const configMgr){
