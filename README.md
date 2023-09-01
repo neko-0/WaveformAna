@@ -45,8 +45,9 @@ The user analysis need to be derived from class `BaseAna`, so in `MyNewAna.hpp`:
 struct MyNewAna : BaseAna {
   MyNewAna(){};
   ~MyNewAna(){};
+  virtual void setup(BetaConfigMgr *configMgr);
   virtual void initialize(BetaConfigMgr *configMgr); // call only once for initialization purpose.
-  virtual void execute(BetaConfigMgr *configMgr); // call for every waveform event.
+  virtual bool execute(BetaConfigMgr *configMgr); // call for every waveform event.
   virtual void finalize(BetaConfigMgr *configMgr); // call only once for cleanup purpose.
 };
 ```
