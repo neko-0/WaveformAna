@@ -270,6 +270,8 @@ void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
 }
 
 //==============================================================================
+=======
+>>>>>>> master
 bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
