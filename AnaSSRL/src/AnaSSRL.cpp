@@ -257,6 +257,9 @@ void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
       corr_w.push_back(w[ch]->at(i) * polarity);
   }
 
+  auto mix_params = wm::CalcMaxNoiseBase(corr_w, 0.25);
+  *output_rms[ch] = mix_params.rms;
+
   if(fill_fix_window){
     for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
       auto _begin = *t[ch]->begin();
@@ -271,7 +274,6 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
   // else *trig_time = -1.0;
-
   // #pragma omp parallel for if(active_ch_.size() > 5)
   for(auto &ch : active_ch_){
     if(w[ch]->size() == 0){
