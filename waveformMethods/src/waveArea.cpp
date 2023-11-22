@@ -28,6 +28,8 @@ double _CalcPulseArea(
   double rpulse_area = 0.0;
   int lstart_i = lstart;
   int rstart_i = rstart;
+  if(rstart_i <= lstart_i) rstart_i = lstart_i+1;
+  if(rstart_i == 0) rstart_i = 1;
   // left side of the pulse
   while(true){
     if(lstart_i < 0) lstop=true;
