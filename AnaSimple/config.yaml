@@ -1,0 +1,8 @@
+general:
+  store_waveform: true
+  use_single_input_t_trace: false
+  start_ch_index: 1
+  search_tmax: 2e-9
+  search_tmin: -2e-9
+  invert_ch: [2]
+
