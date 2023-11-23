@@ -78,7 +78,7 @@ bool AnaSimple::execute(BetaConfigMgr* const configMgr){
             polarity = -1.0;
         }
         for(int i = 0; i < w[ch]->size(); i++){
-            corr_w.push_back((w[ch]->at(i) - baseline_params.baseline * polarity));
+            corr_w.push_back((w[ch]->at(i) - baseline_params.baseline) * polarity);
         }
 
         *output_rms[ch] = baseline_params.rms;
