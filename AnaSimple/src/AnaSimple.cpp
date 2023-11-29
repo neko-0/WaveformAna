@@ -74,7 +74,7 @@ bool AnaSimple::execute(BetaConfigMgr* const configMgr){
         std::vector<double> corr_w;
         corr_w.reserve(w[ch]->size());
         double polarity = 1.0;
-        if(std::find(this->invert_channels_.begin(), this->invert_channels_.end(), ch) != this->invert_channels_.end() ) {
+        if(std::find(this->invert_channels_.begin(), this->invert_channels_.end(), ch+ch_start_) != this->invert_channels_.end() ) {
             polarity = -1.0;
         }
         for(int i = 0; i < w[ch]->size(); i++){
