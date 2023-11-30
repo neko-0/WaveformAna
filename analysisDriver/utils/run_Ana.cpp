@@ -44,12 +44,13 @@ int main(int argc, char **argv){
   // ("thread,j", bpo::value<unsigned>()->default_value(std::thread::hardware_concurrency()), "using number of thread.")
   ;
   bpo::store(bpo::parse_command_line(argc, argv, desc, style), vm);
-  bpo::notify(vm);
-
+  
   if(vm.count("help")){
     std::cout << desc << std::endl;
     return 0;
   }
+
+  bpo::notify(vm);
 
   // verifying analysis
   std::string selector = vm["selector"].as<std::string>();

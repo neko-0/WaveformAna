@@ -20,6 +20,12 @@ where
   - `--selector, -s` is the name of the user analysis
   - `--directory, -d` is the path to the `ROOT` files.
 
+optional:
+  - `--config, -c` path to configuration file. User need to implement actual usage in the analysis routine.
+  - `--nfile, -n` number of files for MP.
+  - `--mp` turn on multiprocessing.
+
+
 # Creating your own analysis
 
 New user analysis need to be registered in order to be used with `run_Ana`.
