@@ -25,6 +25,7 @@ private:
   std::vector<double> *t;
   double *posx = 0;
   double *posy = 0;
+  double *posz = 0;
  
   double **posx_addr;
 
