@@ -39,7 +39,13 @@ double CalcBaseline(
   auto lower = std::lower_bound(t_trace.begin(), t_trace.end(), tmin);
   auto upper = std::lower_bound(t_trace.begin(), t_trace.end(), tmax);
   int dN = std::distance(lower, upper);
-  double sum = std::accumulate(lower, upper, 0.0);
+  auto iter0 = v_trace.begin();
+  auto iter1 = v_trace.begin();
+  int start = std::distance(t_trace.begin(), lower);
+  int end = std::distance(t_trace.begin(), upper);
+  std::advance(iter0, start);
+  std::advance(iter1, end);
+  double sum = std::accumulate(iter0, iter1, 0.0);
 
   return sum / dN;
 }
