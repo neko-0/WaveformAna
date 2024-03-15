@@ -188,6 +188,7 @@ void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
     corr_w.at(i) *= polarity;
   }
 
+  // search for all possible Pmax
   auto n_wave_pts = wm::FindMultipleSignalMax(corr_w, *t[ch], threshold);
   auto n_raw_wave_pts = wm::FindMultipleSignalMax(w[ch], t[ch], threshold);
 
@@ -246,6 +247,10 @@ void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
 }
 
 //==============================================================================
+/* 
+Simple routine to with baseline correction using only 25% points.
+This routine does NOT distinguish bunches, and treat entire waveform as single signal waveform.
+*/
 void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
   double polarity = 1.0;
   // check user specified invertion
@@ -257,6 +262,7 @@ void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
       corr_w.push_back(w[ch]->at(i) * polarity);
   }
 
+  // baseline correction with first 25% of the points.
   auto mix_params = wm::CalcMaxNoiseBase(corr_w, 0.25);
   *output_rms[ch] = mix_params.rms;
 
@@ -264,6 +270,7 @@ void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
     for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
       auto _begin = *t[ch]->begin();
       auto _end = *(t[ch]->end()-2);
+      // The true flag just repeatly fill with the first entry. good for traces without bunches.
       fill_fix_window_branches(ch, corr_w, *t[ch], _begin, _end, true);
     }
   }
@@ -275,7 +282,7 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
   // else *trig_time = -1.0;
   // #pragma omp parallel for if(active_ch_.size() > 5)
-  for(auto &ch : active_ch_){
+  for(auto &ch : active_ch_) {
     if(w[ch]->size() == 0){
       LOG_WARNING("Trace size 0");
       continue;
@@ -306,6 +313,7 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
     }
   }
 
+  // you probably don't need this except for previous old AC-LGAD runs.
   if(do_max_ch_) {
     std::vector<int> large_pad = {4, 5, 6, 7, 8, 9, 10, 11};
     std::vector<int> small_pad = {0, 1, 2, 3, 12, 13, 14, 15};
@@ -328,6 +336,10 @@ void AnaSSRL::finalize(BetaConfigMgr* const configMgr){
   // pass
 }
 
+// =============================================================================
+/*
+Assign previously found Pmax to each bucket.
+*/
 void AnaSSRL::bucket_time_difference(
   const int &ch,
   const double &bucket_start,
@@ -415,26 +427,32 @@ void AnaSSRL::prepare_fix_window_branches(BetaConfigMgr* const configMgr){
 }
 
 // =============================================================================
+/*
+Find signal maximum in a given time interval.
+The default threshold for accepting is 0.0
+*/
 void AnaSSRL::fill_fix_window_branches(
   int ch,
   const std::vector<double> &v_trace,
   const std::vector<double> &t_trace,
   double t_min,
   double t_max,
-  bool fill_previous)
+  bool fill_previous,
+  double threshold)
 {
-  if(output_fix_pmax[ch]->size()!=0 &&fill_previous){
+  // just repeatly fill with the first entry if fill_previous = true.
+  if(output_fix_pmax[ch]->size()!=0 && fill_previous){
       output_fix_pmax[ch]->push_back(output_fix_pmax[ch]->back());
       output_fix_tmax[ch]->push_back(output_fix_tmax[ch]->back());
       output_fix_area[ch]->push_back(output_fix_area[ch]->back());
   }
 
-  double threshold = 0.0;
   auto s_max = wm::FindSignalMax(v_trace, t_trace, t_min, t_max);
+  // do check on Pmax value, and distance of Tmax from the left and right time interval bounds. 
   if(s_max.v < threshold
     || abs(s_max.t - t_min) <= this->fix_win_edge_dist_
     || abs(s_max.t - t_max) <= this->fix_win_edge_dist_) {
-      output_fix_pmax[ch]->push_back(0.0);
+      output_fix_pmax[ch]->push_back(-1.0);
       output_fix_tmax[ch]->push_back(-1.0);
       output_fix_area[ch]->push_back(0.0);
   }

@@ -29,7 +29,8 @@ private:
     const std::vector<double> &t_trace,
     double t_min,
     double t_max,
-    bool fill_previous=false);
+    bool fill_previous=false,
+    double threshold=0.0);
 
   void find_max_ch(
     const std::vector<int> &chlist,
