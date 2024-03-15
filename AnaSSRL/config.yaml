@@ -11,6 +11,8 @@ general:
   trigger_ch: 2
   invert_ch: [1]
   simple_ana_ch: [-1]
+  # opt 1: regular scope routine, opt 2: CAEN scan routine
+  routine: 1
 
 # user need to specify a bucket start time
 # the bucket_t_end is actually the step size.

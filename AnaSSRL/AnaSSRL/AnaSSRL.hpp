@@ -52,6 +52,7 @@ private:
   void regular_routine(std::vector<double> &corr_w, int ch);
   void simple_routine(std::vector<double> &corr_w, int ch);
   void trigger_routine(std::vector<double> &corr_w, int ch);
+  void scan_routinue(std::vector<double> &corr_w, int ch);
 
 private:
   const int ch_start_ = 0;
@@ -61,6 +62,8 @@ private:
   bool use_single_t_trace = true;
   bool use_single_input_t_trace = true;
   bool found_single_t_trace = false;
+
+  int routine_ = 1;
 
   bool skip_it = false;
 
@@ -93,7 +96,8 @@ private:
   std::vector<double> *w[num_ch_];
   std::vector<double> *t[num_ch_];
 
-  std::vector<double> *trig;
+  std::vector<double> *trg0;
+  std::vector<double> *trg1;
 
   // ===========================================================================
   // output variables
@@ -143,6 +147,8 @@ private:
   double *thresholdTime[num_ch_];
 
   double *trig_time;
+
+  double trg_threshold_time_;
 
 };
 

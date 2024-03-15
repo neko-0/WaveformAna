@@ -31,6 +31,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->invert_ch = general["invert_ch"].as<std::vector<int>>();
   this->trigger_ch = general["trigger_ch"].as<int>();
   this->simple_ana_ch = general["simple_ana_ch"].as<std::vector<int>>();
+  this->routine_ = general["routine"].as<int>();
 
   const auto &buckets = yaml_config["buckets"];
   this->fill_bucket = buckets["fill_bucket"].as<bool>();
@@ -45,6 +46,10 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->fix_win_nstep_ = fix_win["fix_win_nstep"].as<int>();
   this->fix_win_edge_dist_ = fix_win["fix_win_edge_dist"].as<double>();
 
+  // CAEN trigger channels
+  trg0 = configMgr->SetInputBranch<std::vector<double>>("trg0");
+  trg1 = configMgr->SetInputBranch<std::vector<double>>("trg1");
+  
   for(int i = 0; i < num_ch; i++){
     // input branches
     std::string current_ch = std::to_string(ch_start_ + i);
@@ -72,7 +77,6 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     output_50cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("cfd50_" + current_ch);
     output_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("tmaxdiff" + current_ch);
     output_raw_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("raw_pmax" + current_ch);
-
     
     thresholdTime[i] = configMgr->SetOutputBranch<double>("thresholdTime" + current_ch);
 
@@ -261,7 +265,17 @@ void AnaSSRL::simple_routine(std::vector<double> &corr_w, int ch){
 }
 
 //==============================================================================
+void AnaSSRL::scan_routinue(std::vector<double> &corr_w, int ch) {
+  std::cout << trg_threshold_time_ << std::endl;
+
+}
+
+//==============================================================================
 bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
+  
+  if( trg0 ) {
+    trg_threshold_time_ = wm::FindTimeAtThreshold(*trg0, *t[0], 3000).at(0);
+  }
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
   // else *trig_time = -1.0;
@@ -279,7 +293,12 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
     } else if(this->trigger_ch == ch){
       trigger_routine(corr_w, ch);
     } else {
-      regular_routine(corr_w, ch);
+      if(routine_ == 2) {
+        scan_routinue(corr_w, ch);
+      }
+      else {
+        regular_routine(corr_w, ch);
+      }
     }
 
     auto th_time = wm::FindTimeAtThreshold(corr_w, *t[ch], 0.5);
