@@ -33,6 +33,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->simple_ana_ch = general["simple_ana_ch"].as<std::vector<int>>();
 
   const auto &buckets = yaml_config["buckets"];
+  this->fill_bucket = buckets["fill_bucket"].as<bool>();
   this->bucket_t_start_ = buckets["bucket_t_start"].as<double>();
   this->bucket_t_end_ = buckets["bucket_t_end"].as<double>();
   this->nbuckets_ = buckets["nbuckets"].as<int>();
@@ -72,26 +73,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     output_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("tmaxdiff" + current_ch);
     output_raw_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("raw_pmax" + current_ch);
 
-    // output_bucket_corr[i] = configMgr->SetOutputBranch<float>("bucket_corr" + current_ch);
-    output_bucket_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_pmax" + current_ch);
-    output_bucket_tmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax" + current_ch);
-    output_bucket_area[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_area" + current_ch);
-    output_bucket_cfd20[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_" + current_ch);
-    output_bucket_cfd50[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_" + current_ch);
-    output_bucket_index[i] = configMgr->SetOutputBranch<std::vector<int>>("bucket_index" + current_ch);
-    output_bucket_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax_diff" + current_ch);
-    output_bucket_cfd20_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_diff" + current_ch);
-    output_bucket_cfd50_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_diff" + current_ch);
-    output_bucket_pmax[i]->reserve(nbuckets_);
-    output_bucket_tmax[i]->reserve(nbuckets_);
-    output_bucket_area[i]->reserve(nbuckets_);
-    output_bucket_cfd20[i]->reserve(nbuckets_);
-    output_bucket_cfd50[i]->reserve(nbuckets_);
-    output_bucket_index[i]->reserve(nbuckets_);
-    output_bucket_tmax_diff[i]->reserve(nbuckets_);
-    output_bucket_cfd20_diff[i]->reserve(nbuckets_);
-    output_bucket_cfd50_diff[i]->reserve(nbuckets_);
-
+    
     thresholdTime[i] = configMgr->SetOutputBranch<double>("thresholdTime" + current_ch);
 
     if(store_waveform){
@@ -110,7 +92,9 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     }
   }
 
+  if(fill_bucket) prepare_bucket_branches(configMgr);
   if(fill_fix_window) prepare_fix_window_branches(configMgr);
+  
 
   LOG_INFO("number of active chanenls: " + std::to_string(active_ch_.size()));
 }
@@ -235,7 +219,7 @@ void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
     output_raw_pmax[ch]->push_back(pt.v);
   }
 
-  bucket_time_difference(ch, bucket_t_start_, bucket_t_end_); // 0.5, 1.0 for Digitizer run
+  if(fill_bucket) bucket_time_difference(ch, bucket_t_start_, bucket_t_end_); // 0.5, 1.0 for Digitizer run
 
   if(fill_fix_window){
     for(std::size_t _step = 0; _step < fix_win_nstep_; _step++){
@@ -424,6 +408,32 @@ void AnaSSRL::prepare_fix_window_branches(BetaConfigMgr* const configMgr){
   output_sum_strip_set1 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set1");
   output_sum_strip_set2 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set2");
   output_sum_strip_set3 = configMgr->SetOutputBranch<std::vector<double>>("sum_strip_set3");
+}
+
+// =============================================================================
+void AnaSSRL::prepare_bucket_branches(BetaConfigMgr* const configMgr) {
+  for(auto &i : active_ch_) {
+    std::string current_ch = std::to_string(ch_start_ + i);
+    output_bucket_corr[i] = configMgr->SetOutputBranch<float>("bucket_corr" + current_ch);
+    output_bucket_pmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_pmax" + current_ch);
+    output_bucket_tmax[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax" + current_ch);
+    output_bucket_area[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_area" + current_ch);
+    output_bucket_cfd20[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_" + current_ch);
+    output_bucket_cfd50[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_" + current_ch);
+    output_bucket_index[i] = configMgr->SetOutputBranch<std::vector<int>>("bucket_index" + current_ch);
+    output_bucket_tmax_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_tmax_diff" + current_ch);
+    output_bucket_cfd20_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd20_diff" + current_ch);
+    output_bucket_cfd50_diff[i] = configMgr->SetOutputBranch<std::vector<float>>("bucket_cfd50_diff" + current_ch);
+    output_bucket_pmax[i]->reserve(nbuckets_);
+    output_bucket_tmax[i]->reserve(nbuckets_);
+    output_bucket_area[i]->reserve(nbuckets_);
+    output_bucket_cfd20[i]->reserve(nbuckets_);
+    output_bucket_cfd50[i]->reserve(nbuckets_);
+    output_bucket_index[i]->reserve(nbuckets_);
+    output_bucket_tmax_diff[i]->reserve(nbuckets_);
+    output_bucket_cfd20_diff[i]->reserve(nbuckets_);
+    output_bucket_cfd50_diff[i]->reserve(nbuckets_);
+  }
 }
 
 // =============================================================================

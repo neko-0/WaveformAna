@@ -31,6 +31,8 @@ private:
     double t_max,
     bool fill_previous=false,
     double threshold=0.0);
+  
+  void prepare_bucket_branches(BetaConfigMgr* const configMgr);
 
   void find_max_ch(
     const std::vector<int> &chlist,
@@ -64,6 +66,7 @@ private:
 
   double threshold = 0.0;
 
+  bool fill_bucket = true;
   double bucket_t_start_ = -44e-9;
   double bucket_t_end_ = 2.08e-9;
   int nbuckets_= 28;
