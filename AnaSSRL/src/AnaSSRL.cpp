@@ -274,7 +274,7 @@ void AnaSSRL::scan_routinue(std::vector<double> &corr_w, int ch) {
 bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
   
   if( trg0 ) {
-    trg_threshold_time_ = wm::FindTimeAtThreshold(*trg0, *t[0], 3000).at(0);
+    trg_threshold_time_ = wm::FindTimeAtThreshold(*trg0, *t[0], 1200).at(0);
   }
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
