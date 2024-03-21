@@ -58,8 +58,14 @@ double CalcNoise(
 {
   auto lower = std::lower_bound(t_trace.begin(), t_trace.end(), tmin);
   auto upper = std::lower_bound(t_trace.begin(), t_trace.end(), tmax);
-  int lower_i = std::distance(t_trace.begin(), lower);
-  int upper_i = std::distance(t_trace.begin(), upper);
+  int lower_i = 0;
+  int upper_i = t_trace.size();
+  if(lower != t_trace.end()) {
+    lower_i = std::distance(t_trace.begin(), lower);
+  }
+  if(upper != t_trace.end()) {
+    upper_i = std::distance(t_trace.begin(), upper);
+  }
   return CalcNoise(v_trace, lower_i, upper_i);
 }
 
