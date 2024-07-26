@@ -33,11 +33,12 @@ int main(int argc, char **argv){
   );
   desc.add_options()
   ("help,h", "help message.")
-  ("directory,d", bpo::value<std::string>()->required(), "directory for the input files")
+  ("directory,d", bpo::value<std::string>()->default_value("."), "directory for the input files")
   ("selector,s", bpo::value<std::string>()->required(), "analysis selector")
   ("config,c", bpo::value<std::string>()->default_value(""), "configuration file")
   ("mp", bpo::bool_switch()->default_value(false), "internal mp")
   ("nfile,n", bpo::value<int>()->default_value(5), "number of files for mp")
+  ("input,i", bpo::value<std::string>()->default_value(""), "input file.")
   // ("skipWaveform", bpo::bool_switch()->default_value(false), "skipping waveform in output file.")
   // ("skim", bpo::bool_switch()->default_value(false), "skim the output file.")
   // ("mp", bpo::bool_switch()->default_value(false), "internal mp")
@@ -58,9 +59,15 @@ int main(int argc, char **argv){
     LOG_INFO("No analysis " + selector);
     return 1;
   }
-  LOG_INFO("Getting list of input files ");
 
-  auto files = GetListOfFiles(vm["directory"].as<std::string>(), "*.root");
+  std::vector<std::string> files;
+  if(!vm["input"].as<std::string>().empty()){
+    files.push_back(vm["input"].as<std::string>());
+  }
+  else{
+    LOG_INFO("Getting list of input files ");
+    files = GetListOfFiles(vm["directory"].as<std::string>(), "*.root");
+  }
 
   if(files.size() == 0){
     LOG_ERROR("Cannot find any files.")

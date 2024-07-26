@@ -14,7 +14,10 @@ WavePoint FindSignalMax(
   int index = -1;
 
   int trace_size = t_trace.size();
-  for(int i = start; i < (end <= trace_size ? end : trace_size); i++)
+  int _start = start < trace_size ? start: trace_size - 1;
+  int _end = end <= trace_size ? end : trace_size;
+
+  for(int i = _start; i < _end; i++)
   {
     if(v_trace.at(i) < vmax) continue;
     vmax = v_trace.at(i);

@@ -11,14 +11,21 @@ double CalcRiseTime(
   const double &high,
   const EdgeType &type)
 {
+  int trace_size = v_trace.size();
+
   int max_index = start_index;
-  if(max_index < 0){
+
+  if(max_index < 0) {
       auto wave_max = FindSignalMax(v_trace, t_trace);
-      max_index = wave_max.index;
   }
 
-  int trace_size = v_trace.size();
-  int top_i=trace_size-2, bot_i=0;
+  if(max_index > trace_size - 2 ) {
+    max_index = trace_size - 2;
+  }
+
+  if(max_index < 0) return -1.0;
+
+  int top_i = trace_size - 2, bot_i = 0;
   bool found_top = false, found_bot = false;
   double low_b = 0.0, high_b = 0.0;
 
@@ -44,8 +51,8 @@ double CalcRiseTime(
     }
     if(found_top && found_bot){
       // make sure it's not he last point
-      if(top_i >= trace_size-1) top_i--;
-      if(bot_i >= trace_size-1) bot_i--;
+      if(top_i >= trace_size-2) top_i--;
+      if(bot_i >= trace_size-2) bot_i--;
       break;
     }
     if(type == EdgeType::Fall) {
@@ -57,6 +64,9 @@ double CalcRiseTime(
     }
   }
 
+  if(bot_i > trace_size - 2 ) bot_i = trace_size - 2;
+  if(top_i > trace_size - 2 ) top_i = trace_size - 2;
+  
   double t1 = Utils::LinearInterpolationX(
       t_trace.at(bot_i), v_trace.at(bot_i),
       t_trace.at(bot_i+1), v_trace.at(bot_i+1), low_b);
