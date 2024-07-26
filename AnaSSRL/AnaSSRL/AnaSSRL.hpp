@@ -17,13 +17,9 @@ struct AnaSSRL : BaseAna {
   virtual bool execute(BetaConfigMgr* const configMgr);
 
 private:
-  void bucket_time_difference(
-    const int &ch,
-    const double &bucket_start,
-    const double &bucket_step);
 
-  void prepare_fix_window_branches(BetaConfigMgr* const configMgr);
-  void fill_fix_window_branches(
+  void prepare_bunch_window_branches(BetaConfigMgr* const configMgr);
+  void fill_bunch_window_branches(
     int ch,
     const std::vector<double> &v_trace,
     const std::vector<double> &t_trace,
@@ -31,9 +27,16 @@ private:
     double t_max,
     bool fill_previous=false,
     double threshold=0.0);
-  
-  void prepare_bucket_branches(BetaConfigMgr* const configMgr);
+  void fill_bunch_window_wp(int ch);
 
+  void prepare_leading_signal_branches(BetaConfigMgr* const configMgr);
+  void fill_leading_signal_branches(
+    int ch,
+    const std::vector<double> &v_trace,
+    const std::vector<double> &t_trace,
+    double t_min,
+    double t_max);
+  
   void find_max_ch(
     const std::vector<int> &chlist,
     std::vector<int> &buffer,
@@ -69,16 +72,13 @@ private:
 
   double threshold = 0.0;
 
-  bool fill_bucket = true;
-  double bucket_t_start_ = -44e-9;
-  double bucket_t_end_ = 2.08e-9;
-  int nbuckets_= 28;
+  int bunch_nstep_ = 40;
+  double bunch_start_ = 560.0;
+  double bunch_step_size_ = 11;
+  double bunch_edge_dist_ = 0.0;
 
-  bool fill_fix_window = true;
-  double fix_win_start_ = 560.0;
-  double fix_win_step_size_ = 11;
-  int fix_win_nstep_ = 40;
-  double fix_win_edge_dist_ = 0.0;
+  double leading_tmin_ = 0.0;
+  double leading_tmax_ = 0.0;
 
   bool do_max_ch_ = false;
 
@@ -88,6 +88,7 @@ private:
   std::vector<int> invert_ch;
   std::vector<int> simple_ana_ch;
 
+  std::vector<double> corr_common_time_;
 
   int trigger_ch = -1;
 
@@ -98,34 +99,24 @@ private:
 
   std::vector<double> *trg0;
   std::vector<double> *trg1;
+  
+  std::vector<double> *pos;
 
   // ===========================================================================
   // output variables
   bool *output_basecorr[num_ch_];
-  int *output_nsignal[num_ch_];
   float *output_rms[num_ch_];
 
-  std::vector<float> *output_rise[num_ch_];
-  std::vector<float> *output_area[num_ch_];
-  std::vector<float> *output_fwhm[num_ch_];
-  std::vector<float> *output_20cfd[num_ch_];
-  std::vector<float> *output_50cfd[num_ch_];
   std::vector<float> *output_pmax[num_ch_];
   std::vector<float> *output_tmax[num_ch_];
-  std::vector<float> *output_tmax_diff[num_ch_];
-  std::vector<float> *output_raw_pmax[num_ch_];
-
-  std::vector<float> *output_bucket_pmax[num_ch_];
-  std::vector<float> *output_bucket_area[num_ch_];
-  std::vector<float> *output_bucket_tmax[num_ch_];
-  std::vector<float> *output_bucket_cfd20[num_ch_];
-  std::vector<float> *output_bucket_cfd50[num_ch_];
-  std::vector<int> *output_bucket_index[num_ch_];
-  std::vector<float> *output_bucket_tmax_diff[num_ch_];
-  std::vector<float> *output_bucket_cfd20_diff[num_ch_];
-  std::vector<float> *output_bucket_cfd50_diff[num_ch_];
-  float *output_bucket_corr[num_ch_];
-
+  std::vector<float> *output_rise[num_ch_];
+  std::vector<float> *output_fall[num_ch_];
+  std::vector<float> *output_area[num_ch_];
+  std::vector<float> *output_20cfd[num_ch_];
+  std::vector<float> *output_50cfd[num_ch_];
+  std::vector<bool> *output_wp_loose[num_ch_];
+  std::vector<bool> *output_wp_tight[num_ch_];
+  
   std::vector<int> *output_max_ch;
   std::vector<int> *output_2nd_max_ch;
   std::vector<int> *output_small_pad_max_ch;
@@ -140,15 +131,21 @@ private:
   std::vector<float> *output_corr_w[num_ch_];
   std::vector<float> *output_t[num_ch_];
 
-  std::vector<float> *output_fix_pmax[num_ch_];
-  std::vector<float> *output_fix_tmax[num_ch_];
-  std::vector<float> *output_fix_area[num_ch_];
+  float *output_leading_fall[num_ch_];
+  float *output_leading_pmax[num_ch_];
+  float *output_leading_tmax[num_ch_];
+  float *output_leading_area[num_ch_];
+  float *output_leading_rise[num_ch_];
+  float *output_leading_20cfd[num_ch_];
+  float *output_leading_50cfd[num_ch_];
 
   double *thresholdTime[num_ch_];
 
   double *trig_time;
 
   double trg_threshold_time_;
+
+  double *output_x, *output_y;
 
 };
 
