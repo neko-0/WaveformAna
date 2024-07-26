@@ -64,6 +64,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
     // output branches
     output_basecorr[i] = configMgr->SetOutputBranch<bool>("basecorr" + current_ch);
     thresholdTime[i] = configMgr->SetOutputBranch<double>("thresholdTime" + current_ch);
+    output_rms[i] = configMgr->SetOutputBranch<float>("rms" + current_ch);
 
     if(store_waveform){
       output_w[i] = configMgr->SetOutputBranch<std::vector<float>>("w" + current_ch);
