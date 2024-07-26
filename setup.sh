@@ -5,7 +5,7 @@ export WAVEANA_BUILD_DIR=$TestArea/../WaveformAna_build
 
 mkdir -p $WAVEANA_BUILD_DIR
 cd $WAVEANA_BUILD_DIR
-cmake -B $WAVEANA_BUILD_DIR -S $TestArea
+cmake -B $WAVEANA_BUILD_DIR -S $TestArea -DCMAKE_BUILD_TYPE=RELEASE
 
 alias build='cmake --build $WAVEANA_BUILD_DIR'
 # there must be a easier way to set alias for executable
