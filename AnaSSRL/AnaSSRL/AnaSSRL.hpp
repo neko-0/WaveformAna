@@ -70,7 +70,7 @@ private:
 
   bool skip_it = false;
 
-  double threshold = 0.0;
+  double threshold_ = 0.0;
 
   int bunch_nstep_ = 40;
   double bunch_start_ = 560.0;

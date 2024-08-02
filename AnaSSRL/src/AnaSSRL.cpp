@@ -24,7 +24,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->baseline_opt = general["baseline_opt"].as<int>();
   this->run_type = general["run_type"].as<int>();
   this->do_max_ch_ = general["do_max_ch"].as<bool>();
-  this->threshold = general["threshold"].as<double>();
+  this->threshold_ = general["threshold"].as<double>();
   int num_ch = this->num_ch_;
   if(general["nchannels"].as<int>() > 0){
     num_ch = general["nchannels"].as<int>();
@@ -115,7 +115,6 @@ void AnaSSRL::trigger_routine(std::vector<double> &corr_w, int ch){
       corr_w.push_back((w[ch]->at(i) - mix_params.baseline) * polarity);
   }
 
-  
   for(std::size_t _step = 0; _step < bunch_nstep_; _step++){
     auto _begin = *t[ch]->begin();
     auto _end = *(t[ch]->end()-2);
@@ -139,7 +138,7 @@ void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
   } 
   
   // overwrite by user threshold
-  if(this->threshold > 0.0) threshold = this->threshold;
+  if(this->threshold_ > 0.0) threshold = this->threshold_;
   else threshold = *output_rms[ch] * 5.0;
   
   std::shared_ptr<std::vector<double>> inv_w = nullptr;
@@ -255,7 +254,7 @@ void AnaSSRL::scan_routinue(std::vector<double> &corr_w, int ch) {
   *output_rms[ch] = rms;
 
   // search for all possible Pmax
-  double threshold = this->threshold;
+  double threshold = this->threshold_;
   if(threshold <= 0.0) threshold = rms * 5;
 
   fill_leading_signal_branches(ch, corr_w, corr_common_time_, this->leading_tmin_, this->leading_tmax_);
@@ -281,7 +280,7 @@ void AnaSSRL::scan_routinue(std::vector<double> &corr_w, int ch) {
 bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
 
   if( trg0 ) {
-    trg_threshold_time_ = wm::FindTimeAtThreshold(*trg0, *t[0], 1200).at(0);
+    trg_threshold_time_ = wm::FindTimeAtThreshold(*trg0, *t[0], this->threshold_, true).at(0);
   }
   // auto timestamp = wm::FindTimeAtThreshold(*trig, *t[0], 3000);
   // if(timestamp.size()>0) *trig_time = timestamp.at(0);
@@ -308,13 +307,8 @@ bool AnaSSRL::execute(BetaConfigMgr* const configMgr){
       }
     }
 
-    auto th_time = wm::FindTimeAtThreshold(corr_w, *t[ch], 0.5);
-    if(th_time.size() != 0){
-      *thresholdTime[ch] = th_time.at(0);
-    } else {
-      *thresholdTime[ch] = -999;
-    }
-
+    *thresholdTime[ch] = wm::FindTimeAtThreshold(corr_w, *t[ch], this->threshold_, true).at(0);
+   
     if(store_waveform){
       std::move(corr_w.begin(), corr_w.end(), std::back_inserter(*output_corr_w[ch]));
       std::move(w[ch]->begin(), w[ch]->end(), std::back_inserter(*output_w[ch]));
