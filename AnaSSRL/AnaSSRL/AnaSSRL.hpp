@@ -58,7 +58,7 @@ private:
   void scan_routinue(std::vector<double> &corr_w, int ch);
 
 private:
-  const int ch_start_ = 0;
+  int ch_start_ = 0;
   static const int num_ch_ = 16;
   std::vector<int> active_ch_ = {};
   bool store_waveform = true;

@@ -17,6 +17,7 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   YAML::Node yaml_config = YAML::LoadFile(configMgr->ext_config_name());
 
   const auto &general = yaml_config["general"];
+  this->ch_start_ = general["ch_start"].as<int>();
   this->store_waveform = general["store_waveform"].as<bool>();
   this->use_single_t_trace = general["use_single_t_trace"].as<bool>();
   this->use_single_input_t_trace = general["use_single_input_t_trace"].as<bool>();
@@ -125,20 +126,24 @@ void AnaSSRL::trigger_routine(std::vector<double> &corr_w, int ch){
 void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
   double polarity = 1.0;
   double threshold;
+  
+  std::shared_ptr<std::vector<double>> inv_w = nullptr;
   // check user specified invertion
   if(std::find(this->invert_ch.begin(), this->invert_ch.end(), ch) != this->invert_ch.end() ) {
     polarity = -1.0;
+    inv_w = std::make_shared<std::vector<double>>();
+    inv_w->reserve(w[ch]->size());
+    for(int i=0; i < w[ch]->size(); i++){
+      inv_w->emplace_back(w[ch]->at(i) * -1.0); // need to handle positive signal
+    }
+  } else {
+    inv_w = std::shared_ptr<std::vector<double>>(w[ch], [](std::vector<double>*) {});
   }
 
   if(this->baseline_opt == 1) {
-    std::vector<double> inv_w;
-    inv_w.reserve(w[ch]->size());
-    for(int i=0; i < w[ch]->size(); i++){
-      inv_w.emplace_back(w[ch]->at(i) * -1.0); // need to handle positive signal
-    }
-    corr_w = wm::Baseline::ARPLS_PLS(inv_w, 1.0e5);
+    corr_w = wm::Baseline::ARPLS_PLS(*inv_w, 1.0e5);
   } else {
-    corr_w = wm::Baseline::NoiseMedian(*w[ch], w[ch]->size() / 12);
+    corr_w = wm::Baseline::NoiseMedian(*inv_w, inv_w->size() / 12);
   }
 
   auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
