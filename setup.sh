@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export CURRENT_PATH=$(pwd)
-export SRC_AREA=$(dirname $BASH_SOURCE)
+export SRC_AREA=$(dirname $(realpath $BASH_SOURCE))
 export WAVEANA_BUILD_DIR=$SRC_AREA/../WaveformAna_build
 
 echo "Found source directory: ${SRC_AREA}"
