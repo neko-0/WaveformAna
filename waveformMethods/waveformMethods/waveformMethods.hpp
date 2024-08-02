@@ -109,17 +109,20 @@ namespace waveform_methods
     const TraceD &t_trace,
     const int &start,
     const int &end,
-    const double &threshold);
+    const double &threshold,
+    const bool &early_stop=false);
   std::vector<double> FindTimeAtThreshold(
     const TraceD &v_trace,
     const TraceD &t_trace,
-    const double &threshold);
+    const double &threshold,
+    const bool &early_stop=false);
   std::vector<double> FindTimeAtThreshold(
     const TraceD &v_trace,
     const TraceD &t_trace,
     const double &tmin,
     const double &tmax,
-    const double &threshold);
+    const double &threshold,
+    const bool &early_stop=false);
 
   //============================================================================
   double CalcRiseTime(
