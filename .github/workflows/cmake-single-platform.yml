@@ -36,7 +36,7 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       # run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      run: build
+      run: cmake --build $WAVEANA_BUILD_DIR
 
     # - name: Test
     #   working-directory: ${{github.workspace}}/build
