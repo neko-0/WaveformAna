@@ -1,11 +1,8 @@
 # Installation
 
 ```bash
-mkdir TestArea
-cd TestArea
 git clone https://github.com/neko-0/WaveformAna.git
-cd WaveformAna
-source setup.sh # for next login, just source the same setup.sh
+source WaveformAna/setup.sh # for next login, just source the same setup.sh
 build
 ```
 
