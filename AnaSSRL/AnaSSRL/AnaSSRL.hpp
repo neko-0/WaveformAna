@@ -58,7 +58,7 @@ private:
   void scan_routinue(std::vector<double> &corr_w, int ch);
 
 private:
-  const int ch_start_ = 0;
+  int ch_start_ = 0;
   static const int num_ch_ = 16;
   std::vector<int> active_ch_ = {};
   bool store_waveform = true;
@@ -70,7 +70,7 @@ private:
 
   bool skip_it = false;
 
-  double threshold = 0.0;
+  double threshold_ = 0.0;
 
   int bunch_nstep_ = 40;
   double bunch_start_ = 560.0;
@@ -79,6 +79,9 @@ private:
 
   double leading_tmin_ = 0.0;
   double leading_tmax_ = 0.0;
+
+  double rms_start_ = 0.0;
+  double rms_end_ = 0.0;
 
   bool do_max_ch_ = false;
 
@@ -114,8 +117,16 @@ private:
   std::vector<float> *output_area[num_ch_];
   std::vector<float> *output_20cfd[num_ch_];
   std::vector<float> *output_50cfd[num_ch_];
-  std::vector<bool> *output_wp_loose[num_ch_];
+  
+  std::vector<bool> *output_rms_wp_tight[num_ch_];
+  std::vector<bool> *output_rms_wp_loose[num_ch_];
+  std::vector<bool> *output_bunch_wp_tight[num_ch_];
+  std::vector<bool> *output_bunch_wp_loose[num_ch_];
+  std::vector<bool> *output_fall_wp_tight[num_ch_];
+  std::vector<bool> *output_fall_wp_loose[num_ch_];
   std::vector<bool> *output_wp_tight[num_ch_];
+  std::vector<bool> *output_wp_loose[num_ch_];
+
   
   std::vector<int> *output_max_ch;
   std::vector<int> *output_2nd_max_ch;
