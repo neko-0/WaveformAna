@@ -33,7 +33,9 @@ void AnaSSRL::initialize(BetaConfigMgr* const configMgr){
   this->trigger_ch = general["trigger_ch"].as<int>();
   this->simple_ana_ch = general["simple_ana_ch"].as<std::vector<int>>();
   this->routine_ = general["routine"].as<int>();
-
+  this->rms_start_ = general["rms_start"].as<double>();
+  this->rms_end_ = general["rms_end"].as<double>();
+  
   const auto &bunch_win = yaml_config["bunch_window"];
   this->bunch_start_ = bunch_win["bunch_start"].as<double>();
   this->bunch_step_size_ = bunch_win["bunch_step_size"].as<double>();
@@ -125,17 +127,30 @@ void AnaSSRL::trigger_routine(std::vector<double> &corr_w, int ch){
 //==============================================================================
 void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
   double polarity = 1.0;
-  double threshold;
+  double threshold = 0.0;
+
+  auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
+  *output_rms[ch] = wm::CalcNoise(*w[ch], *t[ch], this->rms_start_, this->rms_end_);
+  
+  if(this->run_type == 0) { // auto polarity detection
+    // check polarity of the signal. determine threshold for pmax finder
+    if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) polarity = 1.0;
+    else polarity = -1.0;
+  } 
+  
+  // overwrite by user threshold
+  if(this->threshold > 0.0) threshold = this->threshold;
+  else threshold = *output_rms[ch] * 5.0;
   
   std::shared_ptr<std::vector<double>> inv_w = nullptr;
   // check user specified invertion
   if(std::find(this->invert_ch.begin(), this->invert_ch.end(), ch) != this->invert_ch.end() ) {
-    polarity = -1.0;
     inv_w = std::make_shared<std::vector<double>>();
     inv_w->reserve(w[ch]->size());
-    for(int i=0; i < w[ch]->size(); i++){
-      inv_w->emplace_back(w[ch]->at(i) * -1.0); // need to handle positive signal
+    for(int i=0; i < w[ch]->size(); i++) {
+      inv_w->emplace_back(w[ch]->at(i) * -1.0);
     }
+    polarity = 1.0; // reset to 1.0
   } else {
     inv_w = std::shared_ptr<std::vector<double>>(w[ch], [](std::vector<double>*) {});
   }
@@ -146,31 +161,8 @@ void AnaSSRL::regular_routine(std::vector<double> &corr_w, int ch){
     corr_w = wm::Baseline::NoiseMedian(*inv_w, inv_w->size() / 12);
   }
 
-  auto mix_params = wm::CalcMaxNoiseBase(*w[ch], 0.25);
-  // auto range_rms = wm::CalcNoise(*w[ch], *t[ch], 480, 550);
-  // mix_params.rms = range_rms;
-
-  if(this->run_type == 0){
-    polarity = -1.0;
-    // threshold = 30.0; // 5.0 * 6.0 AC Digitizer Run
-    threshold = 5.0 * mix_params.rms;
-  } else if (this->run_type == 1) {
-    polarity = 1.0;
-    threshold = 5.0 * mix_params.rms;
-  } else {
-    // check polarity of the signal. determine threshold for pmax finder
-    if(std::abs(mix_params.pos_max) >= std::abs(mix_params.neg_max)) {
-      polarity = 1.0;
-    } else {
-      polarity = -1.0;
-    }
-    threshold = 5.0 * mix_params.rms;
-  }
-
-  if(this->threshold > 0.0) threshold = this->threshold;
-
-  for(int i=0; i < w[ch]->size(); i++){
-    w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline)*polarity;
+  for(int i=0; i < w[ch]->size(); i++) {
+    w[ch]->at(i) = (w[ch]->at(i) - mix_params.baseline) * polarity;
     corr_w.at(i) *= polarity;
   }
 
@@ -259,7 +251,7 @@ void AnaSSRL::scan_routinue(std::vector<double> &corr_w, int ch) {
   // need to estimate the noise. 
   // use the gap between bunch leading signal and sensor response
   // currently hard code from [300, 500] * 200sp
-  double rms = wm::CalcNoise(corr_w, corr_common_time_, 100, 200);
+  double rms = wm::CalcNoise(corr_w, corr_common_time_, this->rms_start_, this->rms_end_);
   *output_rms[ch] = rms;
 
   // search for all possible Pmax
@@ -386,6 +378,13 @@ void AnaSSRL::prepare_bunch_window_branches(BetaConfigMgr* const configMgr){
     output_fall[i] = configMgr->SetOutputBranch<std::vector<float>>("falltime" + current_ch);
     output_20cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("cfd20_" + current_ch);
     output_50cfd[i] = configMgr->SetOutputBranch<std::vector<float>>("cfd50_" + current_ch);
+    
+    output_rms_wp_loose[i] = configMgr->SetOutputBranch<std::vector<bool>>("rms_wp_loose" + current_ch);
+    output_rms_wp_tight[i] = configMgr->SetOutputBranch<std::vector<bool>>("rms_wp_tight" + current_ch);
+    output_bunch_wp_loose[i] = configMgr->SetOutputBranch<std::vector<bool>>("bunch_wp_loose" + current_ch);
+    output_bunch_wp_tight[i] = configMgr->SetOutputBranch<std::vector<bool>>("bunch_wp_tight" + current_ch);
+    output_fall_wp_loose[i] = configMgr->SetOutputBranch<std::vector<bool>>("fall_wp_loose" + current_ch);
+    output_fall_wp_tight[i] = configMgr->SetOutputBranch<std::vector<bool>>("fall_wp_tight" + current_ch);
     output_wp_loose[i] = configMgr->SetOutputBranch<std::vector<bool>>("wp_loose" + current_ch);
     output_wp_tight[i] = configMgr->SetOutputBranch<std::vector<bool>>("wp_tight" + current_ch);
 
@@ -396,6 +395,12 @@ void AnaSSRL::prepare_bunch_window_branches(BetaConfigMgr* const configMgr){
     output_fall[i]->reserve(bunch_nstep_);
     output_20cfd[i]->reserve(bunch_nstep_);
     output_50cfd[i]->reserve(bunch_nstep_);
+    output_rms_wp_loose[i]->reserve(bunch_nstep_);
+    output_rms_wp_tight[i]->reserve(bunch_nstep_);
+    output_bunch_wp_loose[i]->reserve(bunch_nstep_);
+    output_bunch_wp_tight[i]->reserve(bunch_nstep_);
+    output_fall_wp_loose[i]->reserve(bunch_nstep_);
+    output_fall_wp_tight[i]->reserve(bunch_nstep_);
     output_wp_loose[i]->reserve(bunch_nstep_);
     output_wp_tight[i]->reserve(bunch_nstep_);
   }
@@ -489,59 +494,96 @@ void AnaSSRL::fill_bunch_window_wp(int ch)
   // check for working points
   // loose working point requires pmax > 3*rms, and tmax difference > 0.5*fix_win_step_size_
   // tight working point requires pmax > 5*rms, and tmax difference > 0.8*fix_win_step_size_
-  std::vector<int> bad_loose;
-  std::vector<int> bad_tight;
-  for(auto i = 0; i < output_pmax[ch]->size()-1; i++){
+  
+  std::vector<int> bad_rms_loose;
+  std::vector<int> bad_rms_tight;
+  std::vector<int> bad_bunch_loose;
+  std::vector<int> bad_bunch_tight;
+  std::vector<int> bad_fall_loose;
+  std::vector<int> bad_fall_tight;
+  
+  for(auto i = 0; i < output_pmax[ch]->size()-1; i++) {
     double pmax1 = output_pmax[ch]->at(i);
     double tmax1 = output_tmax[ch]->at(i);
     double pmax2 = output_pmax[ch]->at(i+1);
     double tmax2 = output_tmax[ch]->at(i+1);
     
     // loose
-    if( pmax1 + pmax2 < (*output_rms[ch] * 3) * 2 ) {
-      if( pmax1 < (*output_rms[ch] * 3)) bad_loose.push_back(i);
-      if( pmax2 < (*output_rms[ch] * 3)) bad_loose.push_back(i+1);
-    } else {
-      if(tmax2 - tmax1 < 0.5 * bunch_step_size_) {
-        if(pmax1 < pmax2) {
-          bad_loose.push_back(i);
-        } else {
-          bad_loose.push_back(i+1);
-        } 
-      } else if(tmax2 < tmax1 + output_fall[ch]->at(i)) {
-        bad_loose.push_back(i+1);
-      }
-    }
-
+    if( pmax1 < (*output_rms[ch] * 3)) bad_rms_loose.push_back(i);
+    if( pmax2 < (*output_rms[ch] * 3)) bad_rms_loose.push_back(i+1);
+  
+    if(tmax2 - tmax1 < 0.2 * bunch_step_size_) {
+      if(pmax1 < pmax2) bad_bunch_loose.push_back(i);
+      else bad_bunch_loose.push_back(i+1);
+    } 
+    
+    if(tmax2 < tmax1 + 0.5 * output_fall[ch]->at(i)) bad_fall_loose.push_back(i+1);
+    
     // tight
-    if( pmax1 + pmax2 < (*output_rms[ch] * 5) * 2 ) {
-      if( pmax1 < (*output_rms[ch] * 5)) bad_tight.push_back(i);
-      if( pmax2 < (*output_rms[ch] * 5)) bad_tight.push_back(i+1);
-    } else {
-      if(tmax2 - tmax1 < 0.8 * bunch_step_size_) {
-        if(pmax1 < pmax2) {
-          bad_tight.push_back(i);
-        } else {
-          bad_tight.push_back(i+1);
-        } 
-      } else if(tmax2 < tmax1 + output_fall[ch]->at(i)) {
-        bad_tight.push_back(i+1);
-      }
-    }
+    if( pmax1 < (*output_rms[ch] * 5)) bad_rms_tight.push_back(i);
+    if( pmax2 < (*output_rms[ch] * 5)) bad_rms_tight.push_back(i+1);
+    
+    if(tmax2 - tmax1 < 0.5 * bunch_step_size_) {
+      if(pmax1 < pmax2) bad_bunch_tight.push_back(i);
+      else bad_bunch_tight.push_back(i+1);
+    } 
+    
+    if(tmax2 < tmax1 + 0.8 * output_fall[ch]->at(i)) bad_fall_tight.push_back(i+1);
+
   }
 
   // filling wp
-  for(auto i = 0; i < output_pmax[ch]->size(); i++){
-    if(std::find(bad_loose.begin(), bad_loose.end(), i) != bad_loose.end()){
-      output_wp_loose[ch]->push_back(false);
+  for(auto i = 0; i < output_pmax[ch]->size(); i++) {
+    // filling loose
+    if(std::find(bad_rms_loose.begin(), bad_rms_loose.end(), i) != bad_rms_loose.end()){
+      output_rms_wp_loose[ch]->push_back(false);
     } else {
+      output_rms_wp_loose[ch]->push_back(true);
+    }
+
+    if(std::find(bad_bunch_loose.begin(), bad_bunch_loose.end(), i) != bad_bunch_loose.end()){
+      output_bunch_wp_loose[ch]->push_back(false);
+    } else {
+      output_bunch_wp_loose[ch]->push_back(true);
+    }
+
+    if(std::find(bad_fall_loose.begin(), bad_fall_loose.end(), i) != bad_fall_loose.end()){
+      output_fall_wp_loose[ch]->push_back(false);
+    } else {
+      output_fall_wp_loose[ch]->push_back(true);
+    }
+
+    if(output_rms_wp_loose[ch]->back() && output_bunch_wp_loose[ch]->back() && output_fall_wp_loose[ch]->back()) {
       output_wp_loose[ch]->push_back(true);
-    }
-    if(std::find(bad_tight.begin(), bad_tight.end(), i) != bad_tight.end()){
-      output_wp_tight[ch]->push_back(false);
     } else {
-      output_wp_tight[ch]->push_back(true);
+      output_wp_loose[ch]->push_back(false);
     }
+
+    // filling tight
+    if(std::find(bad_rms_tight.begin(), bad_rms_tight.end(), i) != bad_rms_tight.end()){
+      output_rms_wp_tight[ch]->push_back(false);
+    } else {
+      output_rms_wp_tight[ch]->push_back(true);
+    }
+
+    if(std::find(bad_bunch_tight.begin(), bad_bunch_tight.end(), i) != bad_bunch_tight.end()){
+      output_bunch_wp_tight[ch]->push_back(false);
+    } else {
+      output_bunch_wp_tight[ch]->push_back(true);
+    }
+
+    if(std::find(bad_fall_tight.begin(), bad_fall_tight.end(), i) != bad_fall_tight.end()){
+      output_fall_wp_tight[ch]->push_back(false);
+    } else {
+      output_fall_wp_tight[ch]->push_back(true);
+    }
+
+    if(output_rms_wp_tight[ch]->back() && output_bunch_wp_tight[ch]->back() && output_fall_wp_tight[ch]->back()) {
+      output_wp_tight[ch]->push_back(true);
+    } else {
+      output_wp_tight[ch]->push_back(false);
+    }
+
   }
 }
 
