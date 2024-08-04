@@ -13,7 +13,7 @@ add_library(AnalysisDriver SHARED
 )
 
 # Need to include user analysis here as well.
-set(ANA_LIST AnaSSRL AnaTCT AnaG4 AnaSimple AnaQuickScan)
+set(ANA_LIST AnaSSRL AnaTCT AnaG4 AnaSimple AnaQuickScan AnaHighBW)
 
 target_include_directories(AnalysisDriver PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(AnalysisDriver PUBLIC BaseAna)
