@@ -1,8 +1,8 @@
 general:
-  store_waveform: true
-  use_single_input_t_trace: false
-  start_ch_index: 1
-  search_tmax: 2e-9
-  search_tmin: -2e-9
-  invert_ch: [2]
+  enable_channels: [0,1,2]
+  dut_channel: 0
+  store_waveform: false
+  winsize: 0.25e-6
+  peak_finding_threshold: 0.0015
+
 
