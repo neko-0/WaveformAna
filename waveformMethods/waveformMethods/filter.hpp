@@ -10,7 +10,7 @@ namespace waveform_methods::Filter
 {
   
   template<class InputIt, class OutputIt> constexpr
-  OutputIt WindowMean(
+  OutputIt _WindowMean(
     InputIt v_iter_first,
     InputIt v_iter_last, 
     InputIt t_iter_first,
@@ -46,7 +46,10 @@ namespace waveform_methods::Filter
     std::vector<double> &v_trace, 
     std::vector<double> &t_trace,
     const double winsize);
-
+  
+  std::vector<double> StdScore(
+    std::vector<double> &v_trace,
+    const int winsize);
 
 };
 
