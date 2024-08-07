@@ -1,5 +1,5 @@
-#ifndef WAVEFORMMETHODS_H
-#define WAVEFORMMETHODS_H
+#ifndef WAVEFORM_METHODS_H
+#define WAVEFORM_METHODS_H
 
 #include <vector>
 #include <omp.h>

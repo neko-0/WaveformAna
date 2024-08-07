@@ -1,0 +1,8 @@
+general:
+  enable_channels: [0,1,2]
+  dut_channel: 0
+  store_waveform: false
+  winsize: 0.25e-6
+  peak_finding_threshold: 0.0015
+
+

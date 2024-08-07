@@ -9,6 +9,7 @@ include(GNUInstallDirs)
 add_library(WaveformMethods SHARED
   src/baseline.cpp
   src/cfdTime.cpp
+  src/filter.cpp
   src/mix.cpp
   src/noise.cpp
   src/riseTime.cpp
@@ -20,8 +21,9 @@ add_library(WaveformMethods SHARED
 )
 
 set(WaveformMethods_HEADERS
-  "waveformMethods/core.hpp"
   "waveformMethods/baseline.hpp"
+  "waveformMethods/core.hpp"
+  "waveformMethods/filter.hpp"
   "waveformMethods/utils.hpp"
   "waveformMethods/waveformMethods.hpp"
 )
